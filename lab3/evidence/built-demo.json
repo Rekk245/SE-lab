@@ -1,0 +1,49 @@
+{
+  "created": true,
+  "ledger_id": "3c9523b96e7c4942bc2e8ea76882a402",
+  "income_id": "735c4b7aefaa45c883d08729b15e8157",
+  "expense_ids": [
+    "37e90961566243e38f6a8a05ef6a05c0",
+    "cb71958f79aa4d8db5c806df0431d4e5"
+  ],
+  "pending_id": "b4a8ccbcf9314aa193a6121f4a3b1f28",
+  "summary": {
+    "income": 50000,
+    "expense": 32000,
+    "net": 18000,
+    "categories": [
+      {
+        "label": "资料",
+        "total": 20000
+      },
+      {
+        "label": "食品",
+        "total": 12000
+      }
+    ],
+    "applicants": [
+      {
+        "label": "普通成员 (member)",
+        "total": 32000
+      }
+    ],
+    "shares": [
+      {
+        "id": "1a6ac2f2c0f6422eadc88341925e83e4",
+        "display_name": "审核管理员",
+        "total": 4000
+      },
+      {
+        "id": "406b5e51789849fb9e56e7c05d817143",
+        "display_name": "普通成员",
+        "total": 4000
+      },
+      {
+        "id": "ad94f4b2f8554bd98a726ff11f6119b7",
+        "display_name": "王紫涵",
+        "total": 4000
+      }
+    ],
+    "coverage": "完整：当前尚未执行明细清理"
+  }
+}

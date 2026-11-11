@@ -1,0 +1,31 @@
+[project]
+name = "shared-ledger-lab3"
+version = "1.0.0"
+description = "Desktop shared accounting, review and offline settlement"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.pyink]
+line-length = 80
+pyink-indentation = 4
+target-version = ["py312"]
+
+[tool.pylint.format]
+max-line-length = 80
+
+[tool.pylint.design]
+# SQL-oriented services and handwritten page builders naturally have many
+# fields/arguments. Keep correctness, naming and formatting checks enabled.
+max-args = 14
+max-positional-arguments = 14
+max-attributes = 75
+max-locals = 25
+max-statements = 90
+max-public-methods = 60
+min-public-methods = 0
+
+[tool.pylint.messages_control]
+disable = ["import-outside-toplevel", "too-many-instance-attributes"]
+
+[tool.pylint.main]
+ignore = ["tests", "tools"]

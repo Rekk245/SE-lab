@@ -1,0 +1,56 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #35576B
+skinparam classBackgroundColor #F2F7FA
+skinparam classBorderColor #35576B
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+skinparam rectangleBackgroundColor #EAF3F8
+skinparam rectangleBorderColor #35576B
+hide empty members
+
+title 用例图 四角色与账本范围
+left to right direction
+rectangle "账本成员" as Reader
+rectangle "普通成员" as Member
+rectangle "管理员" as Admin
+rectangle "最高管理员" as Owner
+rectangle "账本创建者" as Creator
+Member --|> Reader
+Admin --|> Member
+Owner --|> Admin
+rectangle "多人共享记账系统" #FFFFFF {
+ usecase "创建 选择 退出账本" as U1
+ usecase "邀请用户加入账本" as U2
+ usecase "查看账目 组合查询\n统计 预算 结算结果" as U3
+ usecase "提交收支 修改本人申请\n确认使用 主动撤销" as U4
+ usecase "申请审批 完成审核\n驳回并填写原因" as U5
+ usecase "登记线下结清 DD-04" as U6
+ usecase "角色 类别 预算设置\n已入账更正 作废 DD-01/05" as U7
+ usecase "日志查询 数据保留设置" as U8
+ usecase "核验成员身份与权限" as Guard
+}
+Reader --> U1
+Reader --> U3
+Member --> U4
+Admin --> U5
+Admin --> U6
+Admin --> U8
+Owner --> U7
+Creator --> U2
+U4 .> Guard : <<include>>
+U5 .> Guard : <<include>>
+U6 .> Guard : <<include>>
+U7 .> Guard : <<include>>
+
+@enduml

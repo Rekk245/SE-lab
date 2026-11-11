@@ -1,0 +1,118 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #35576B
+skinparam classBackgroundColor #F2F7FA
+skinparam classBorderColor #35576B
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+hide empty members
+
+title 类图一 账本与收支核心
+top to bottom direction
+class User {
+ +id: UUID
+ +displayName: String
+}
+class Ledger {
+ +id: UUID
+ +creatorId: UUID
+ +name: String
+ +create(): Ledger
+}
+class Membership {
+ +ledgerId: UUID
+ +userId: UUID
+ +role: Role
+ +active: boolean
+ +authorize(action): boolean
+}
+abstract class Transaction {
+ +id: UUID
+ +ledgerId: UUID
+ +applicantId: UUID
+ +amountCent: int64
+ +categoryId: UUID
+ +version: int
+ +contentVersion: int
+ +status: String
+ +change(expectedVersion)
+}
+class Expense {
+ +mode: TEAM | SPLIT
+ +approvedCent: int64
+ +approvedContentVersion: int
+ +paidCent: int64
+ +refundReceived: boolean
+ +balanced: boolean
+ +confirmUsed()
+ +cancel()
+}
+class Income {
+ +receivedAt: DateTime
+ +submitForCompletion()
+}
+class Evidence {
+ +id: UUID
+ +type: LINK | FILE
+ +locator: String
+ +expiresAt: DateTime
+}
+class Review {
+ +id: UUID
+ +reviewerId: UUID
+ +stage: APPLICATION | COMPLETION
+ +reviewedContentVersion: int
+ +decision: PASS | REJECT
+ +reason: String
+}
+class JournalEntry {
+ +id: UUID
+ +transactionId: UUID
+ +kind: POST | REVERSAL
+ +direction: IN | OUT
+ +amountCent: int64
+ +createdAt: DateTime
+}
+class PostingService <<service>> {
+ +complete(actor, txId, version, requestId)
+ +reverse(actor, entryId, reason)
+}
+User "1" -- "0..*" Membership
+Ledger "1" o-- "1..*" Membership
+Ledger "1" -- "0..*" Transaction
+Membership "1" <-- "0..*" Transaction : applicant
+Transaction <|-- Expense
+Transaction <|-- Income
+Transaction "1" *-- "0..*" Evidence
+Transaction "1" *-- "0..*" Review
+Transaction "1" -- "0..1" JournalEntry : POST
+PostingService ..> Transaction
+PostingService ..> JournalEntry
+JournalEntry "0..1" --> "0..1" JournalEntry : reverses
+note bottom of Membership
+Role: READ_ONLY / MEMBER / ADMIN / OWNER
+角色只在指定账本内生效
+DD-01 初始角色策略是设计候选
+end note
+note bottom of PostingService
+完成状态、入账、分摊同一事务提交
+POST 与 REVERSAL 分别唯一
+普通管理员禁止自审
+end note
+note bottom of JournalEntry
+这里是保留期内逻辑对象
+不代表全部字段永久保存
+永久金额结构由 DD-07 决定
+end note
+
+@enduml

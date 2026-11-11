@@ -1,0 +1,65 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #35576B
+skinparam classBackgroundColor #F2F7FA
+skinparam classBorderColor #35576B
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+skinparam participantBackgroundColor transparent
+skinparam participantBorderColor transparent
+hide empty members
+
+title 时序图 完成审核的幂等与原子入账
+autonumber
+participant "审核人" as Actor
+participant "审批界面" as UI
+participant "PostingService" as S
+participant "PostgreSQL" as DB
+Actor -> UI : 确认完成
+UI -> S : complete(txId, version, requestId)
+S -> DB : 校验登录身份 账本成员及当前角色
+S -> DB : BEGIN; 争用(scope, requestId)唯一键
+alt 已有相同请求
+ DB --> S : 已提交回执和payloadHash
+ S --> UI : 同内容返回原结果\n不同内容409冲突
+else 首次请求
+ S -> DB : SELECT transaction FOR UPDATE
+ DB --> S : 当前版本 状态 金额 申请人
+ S -> S : 校验自审限制 已经使用阶段\nexpectedVersion=当前version\ncontentVersion=approvedContentVersion\n实际金额=获批金额
+ alt 校验失败
+  S -> DB : ROLLBACK
+  S --> UI : 403或409或422 不入账
+ else 校验成功
+  S -> DB : 写完成状态和审核结果
+  S -> DB : INSERT POST (transactionId唯一)
+  S -> DB : 写分摊与应结债务 审计 回执
+  alt 任一步失败
+   S -> DB : ROLLBACK
+   S --> UI : 可重试失败 保持原requestId
+  else 全部成功
+   S -> DB : COMMIT
+   S --> UI : 完成成功及入账编号
+  end
+ end
+end
+UI -> S : 刷新统计
+S -> DB : 汇总有效入账并检查数据覆盖
+S --> UI : 已提交金额 覆盖范围 超额提醒
+note over S,DB
+响应丢失不等于业务失败
+同requestId重试可取回原结果
+不同requestId仍受POST唯一键和状态约束
+候选 DD-03 回执期限受保留政策限制
+end note
+
+@enduml

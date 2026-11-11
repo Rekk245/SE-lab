@@ -1,0 +1,107 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #35576B
+skinparam classBackgroundColor #F2F7FA
+skinparam classBorderColor #35576B
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+hide empty members
+
+title 类图二 分摊 结算与基础设施
+top to bottom direction
+class Expense {
+ +id: UUID
+ +ledgerId: UUID
+ +mode: TEAM | SPLIT
+ +amountCent: int64
+}
+class Share {
+ +expenseId: UUID
+ +memberId: UUID
+ +amountCent: int64
+}
+class Payment {
+ +expenseId: UUID
+ +payerId: UUID
+ +paidCent: int64
+}
+class Obligation {
+ +id: UUID
+ +ledgerId: UUID
+ +entryId: UUID
+ +debtorId: UUID
+ +creditorId: UUID
+ +amountCent: int64
+ +settledCent: int64
+ +version: int
+}
+class OfflineSettlement {
+ +id: UUID
+ +requestId: UUID
+ +operatorId: UUID
+ +paidAt: DateTime
+ +totalCent: int64
+}
+class SettlementAllocation {
+ +settlementId: UUID
+ +obligationId: UUID
+ +amountCent: int64
+}
+class Budget {
+ +ledgerId: UUID
+ +periodType: MONTH | YEAR
+ +periodStart: Date
+ +limitCent: int64
+}
+class AuditEvent {
+ +actorId: UUID
+ +ledgerId: UUID
+ +objectId: UUID
+ +action: String
+ +result: String
+ +expiresAt: DateTime
+}
+class RequestReceipt {
+ +scope: String
+ +requestId: UUID
+ +payloadHash: String
+ +response: String
+ +expiresAt: DateTime
+}
+class RetentionPolicy {
+ +profile: UNDECIDED | A | B
+ +detailDeadline: DateTime
+ +allows(feature, period): boolean
+}
+Expense "1" *-- "0..*" Share
+Expense "1" *-- "0..*" Payment
+Expense "1" -- "0..*" Obligation : 完成时建立 DD-04
+OfflineSettlement "1" *-- "1..*" SettlementAllocation
+Obligation "1" -- "0..*" SettlementAllocation
+RetentionPolicy ..> AuditEvent : 按记录类型清理
+RetentionPolicy ..> RequestReceipt : 识别期限
+RetentionPolicy ..> Budget : 约束历史覆盖
+note bottom of Obligation
+sum(分摊) = 支出金额
+0 <= settledCent <= amountCent
+团队作为虚拟结算主体 不计为成员
+结清仅分配债务 不产生新收支
+end note
+note bottom of RetentionPolicy
+修改 审批历史按候选滚动30天到期
+其他数据不擅自套用同一清理规则
+UNDECIDED 禁止执行破坏性清理
+A 严格金额 / B 额外汇总需授权
+end note
+
+@enduml

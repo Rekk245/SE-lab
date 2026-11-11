@@ -1,0 +1,56 @@
+@startuml
+!pragma layout smetana
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #35576B
+skinparam classBackgroundColor #F2F7FA
+skinparam classBorderColor #35576B
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+hide empty members
+
+title 活动图 支出申请至完成入账
+skinparam ranksep 16
+|申请人|
+start
+:填写两种模式之一 金额 凭据\n均摊时选择参与成员;
+|系统|
+:校验权限与输入 保存申请\n提示预算 不阻断;
+|审核人|
+if (当前版本申请通过?) then (否)
+ :驳回 记录原因;
+ stop
+else (是)
+endif
+|申请人|
+:按获批金额购买并登记付款;
+if (价格或名单变更?) then (是)
+ :修改原申请 回到申请\n重新审核后继续购买;
+ note right
+ 重新审核不通过则停止
+ 详见状态图
+ end note
+else (否)
+endif
+:确认已经使用 提交完成说明;
+|审核人|
+if (完成审核通过?) then (否)
+ :保留已经使用阶段\n记录驳回原因;
+ stop
+else (是)
+endif
+|系统|
+:校验阶段 版本 金额及权限;
+:同一事务 完成状态 唯一入账\n分摊债务 操作记录;
+:提交后更新可见统计;
+stop
+
+@enduml

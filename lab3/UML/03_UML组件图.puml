@@ -1,0 +1,92 @@
+@startuml
+top to bottom direction
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 32
+skinparam padding 12
+skinparam ArrowColor #35576B
+skinparam ArrowThickness 1.3
+skinparam componentBackgroundColor #F2F7FA
+skinparam componentBorderColor #35576B
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #A8B7C4
+skinparam packageFontColor #35576B
+skinparam packageFontStyle bold
+skinparam databaseBackgroundColor #F2F7FA
+skinparam databaseBorderColor #35576B
+skinparam legendBackgroundColor #F7F9FB
+skinparam legendBorderColor #C7D3DC
+skinparam dpi 180
+
+title 组件图 模块划分与分层交互
+
+package "表现层" as Presentation {
+  component "Web UI\n账本 · 收支 · 审批 · 查询 · 结算" as UI
+}
+
+package "接口层" as InterfaceLayer {
+  component "API Controller\n身份识别 · 参数校验 · 请求分派" as API
+}
+
+package "业务服务层  模块化单体" as Business {
+  together {
+    component "账本与成员模块\n账本 · 邀请 · 成员角色" as Member
+    component "收支与审批模块\n申请 · 审核 · 状态流转" as Flow
+    component "查询统计模块\n筛选 · 汇总 · 月年预算" as Query
+  }
+  together {
+    component "审计与保留模块\n操作记录 · 保留策略" as Retain
+    component "入账与更正模块\n唯一入账 · 作废 · 更正" as Posting
+    component "分摊与结算模块\n应承担 · 垫付 · 线下结清" as Settle
+  }
+  Member -[hidden]right-> Flow
+  Flow -[hidden]right-> Query
+  Retain -[hidden]right-> Posting
+  Posting -[hidden]right-> Settle
+  Member -[hidden]down-> Retain
+  Query -[hidden]down-> Settle
+  Flow -down-> Posting
+  Posting -right-> Settle
+}
+
+package "公共支撑" as Support {
+  component "权限策略模块\n账本隔离 · 角色 · 自审限制" as Auth
+  component "定时任务\n按已确认策略触发清理" as Job
+  Auth -[hidden]down-> Job
+}
+
+package "数据访问层" as Persistence {
+  component "统一仓储与事务管理\n业务数据 · 操作记录 · 附件引用" as Repo
+}
+
+package "存储层" as Storage {
+  database "PostgreSQL\n业务记录 · 入账 · 分摊 · 结清" as DB
+  folder "受控附件存储\n鉴权访问 · 按策略清理" as Files
+  DB -[hidden]right-> Files
+}
+
+UI -down-> API
+API -down-> Business
+Business -[dashed,#7A8D9C]down-> Repo
+Repo -[dashed,#7A8D9C]down-> DB
+Repo -[dashed,#7A8D9C]down-> Files
+API -[dashed,#7A8D9C]right-> Auth
+Business -[dashed,#7A8D9C]right-> Auth
+Job -left-> Retain
+API -[hidden]down-> Flow
+Posting -[hidden]down-> Repo
+
+legend bottom
+  |= 连线 |= 含义 |
+  | <color:#35576B>实线箭头</color> | 主要请求、业务调用与任务触发 |
+  | <color:#7A8D9C>虚线箭头</color> | 权限策略与数据访问接口依赖 |
+  核心调用：收支与审批 → 入账与更正 → 分摊与结算
+  各业务模块统一访问仓储；完成状态、入账、分摊及审计同事务提交。
+endlegend
+@enduml

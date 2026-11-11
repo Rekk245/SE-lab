@@ -1,0 +1,91 @@
+{
+  "scope": "shared_ledger/*.py only",
+  "files": {
+    "shared_ledger/__init__.py": {
+      "physical": 3,
+      "nonblank": 2,
+      "code_lines": 1
+    },
+    "shared_ledger/__main__.py": {
+      "physical": 36,
+      "nonblank": 29,
+      "code_lines": 27
+    },
+    "shared_ledger/auth.py": {
+      "physical": 64,
+      "nonblank": 54,
+      "code_lines": 49
+    },
+    "shared_ledger/base.py": {
+      "physical": 118,
+      "nonblank": 103,
+      "code_lines": 88
+    },
+    "shared_ledger/database.py": {
+      "physical": 220,
+      "nonblank": 211,
+      "code_lines": 205
+    },
+    "shared_ledger/demo.py": {
+      "physical": 115,
+      "nonblank": 111,
+      "code_lines": 109
+    },
+    "shared_ledger/domain.py": {
+      "physical": 198,
+      "nonblank": 148,
+      "code_lines": 119
+    },
+    "shared_ledger/membership.py": {
+      "physical": 220,
+      "nonblank": 207,
+      "code_lines": 196
+    },
+    "shared_ledger/posting.py": {
+      "physical": 265,
+      "nonblank": 253,
+      "code_lines": 238
+    },
+    "shared_ledger/query.py": {
+      "physical": 309,
+      "nonblank": 291,
+      "code_lines": 271
+    },
+    "shared_ledger/settlement.py": {
+      "physical": 80,
+      "nonblank": 75,
+      "code_lines": 70
+    },
+    "shared_ledger/ui.py": {
+      "physical": 791,
+      "nonblank": 735,
+      "code_lines": 677
+    },
+    "shared_ledger/ui_design.py": {
+      "physical": 226,
+      "nonblank": 211,
+      "code_lines": 204
+    },
+    "shared_ledger/ui_pages.py": {
+      "physical": 473,
+      "nonblank": 463,
+      "code_lines": 453
+    },
+    "shared_ledger/ui_presenter.py": {
+      "physical": 467,
+      "nonblank": 440,
+      "code_lines": 414
+    },
+    "shared_ledger/workflow.py": {
+      "physical": 367,
+      "nonblank": 352,
+      "code_lines": 326
+    }
+  },
+  "total": {
+    "physical": 3952,
+    "nonblank": 3685,
+    "code_lines": 3447
+  },
+  "tests_physical": 655
+}

@@ -1,0 +1,290 @@
+[
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1440x940",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "owner",
+    "size": "1240x820",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1440x940",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "admin",
+    "size": "1240x820",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1440x940",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "member",
+    "size": "1240x820",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1440x940",
+    "page": 6,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 1,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 2,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 3,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 4,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 5,
+    "clipped_controls": []
+  },
+  {
+    "account": "reader",
+    "size": "1240x820",
+    "page": 6,
+    "clipped_controls": []
+  }
+]

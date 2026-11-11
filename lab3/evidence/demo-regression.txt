@@ -1,0 +1,6 @@
+test_demo_matches_lab_two_totals (tests.test_ledger.ScaleAndDemoTest.test_demo_matches_lab_two_totals) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.654s
+
+OK

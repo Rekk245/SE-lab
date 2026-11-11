@@ -1,0 +1,57 @@
+@startuml
+' 内容与新版状态图一致；精确固定布局见辅助源文件/06_UML状态图.svg。
+top to bottom direction
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 16
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam linetype ortho
+skinparam nodesep 75
+skinparam ranksep 65
+skinparam ArrowColor #35576B
+skinparam stateBackgroundColor #F2F7FA
+skinparam stateBorderColor #35576B
+skinparam noteBackgroundColor #FFF8E9
+skinparam noteBorderColor #C9A253
+skinparam dpi 180
+hide empty description
+
+title 状态图  支出四阶段与分支
+
+state "申请" as A
+state "购买" as B
+state "已经使用" as C
+C : 完成审核驳回时保留
+state "完成" as D
+state "已驳回" as R
+state "已撤销" as X
+state "已作废" as V
+
+[*] -down-> A : 提交申请
+A -down-> B : 审批通过
+B -down-> C : 确认使用\n[金额一致]
+C -down-> D : 完成审核通过\n/ 唯一入账
+A -right-> R : 驳回
+R -left-> A : 修改重提
+B -up-> A : 改价或改名单
+C -up-> A : 改价或改名单
+A -right-> X : 撤销
+B -right-> X : 撤销
+C -right-> X : 撤销
+R -down-> X : 结束申请
+D -down-> V : 作废 / 冲减入账
+V -down-> [*]
+X -down-> [*]
+
+note bottom of X
+撤销条件
+未付款，或退款到账且核平
+仍需报销则继续完成
+end note
+note left of D
+完成条件
+校验金额与版本
+最高管理员仍须确认
+end note
+@enduml
