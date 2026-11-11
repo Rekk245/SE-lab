@@ -72,7 +72,7 @@ class UiPresenterMixin:
         ttk.Separator(form).pack(fill="x", pady=22)
         ttk.Label(
             form,
-            text="演示账号  owner / admin / member / reader\n"
+            text="演示账号  张三 / 李四 / 王五 / 赵六\n"
             "演示密码  Demo2026!（--demo 初始化后可用）",
             style="Muted.TLabel",
             justify="left",
@@ -106,7 +106,7 @@ class UiPresenterMixin:
             self.nav_buttons.append(button)
         tk.Label(
             sidebar,
-            text=f"{self.session.display_name}\n{self.session.username}",
+            text=f"{self.session.display_name}\n{self.session.member_code}",
             foreground="white",
             background=design.NAVY,
             justify="left",

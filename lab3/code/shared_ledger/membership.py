@@ -52,7 +52,7 @@ class MembershipService(base.BaseService):
         with self.database.read() as connection:
             self.authorize(connection, ledger_id)
             rows = connection.execute(
-                "SELECT u.id,u.username,u.display_name,m.role "
+                "SELECT u.id,u.username,u.display_name,u.member_code,m.role "
                 "FROM memberships m JOIN users u ON u.id=m.user_id "
                 "WHERE m.ledger_id=? AND m.active=1 ORDER BY u.username",
                 (ledger_id,),
@@ -69,8 +69,8 @@ class MembershipService(base.BaseService):
             if ledger["creator_id"] != self.session.user_id:
                 raise domain.PermissionDenied("只有账本创建者可以邀请成员")
             user = connection.execute(
-                "SELECT * FROM users WHERE username=? OR id=?",
-                (username.strip(), username.strip()),
+                "SELECT * FROM users WHERE username=? OR id=? OR member_code=?",
+                (username.strip(), username.strip(), username.strip()),
             ).fetchone()
             if not user:
                 raise domain.ValidationError("未找到该账号或用户 ID")
@@ -160,44 +160,85 @@ class MembershipService(base.BaseService):
             )
             self.audit(connection, ledger_id, user_id, "SET_ROLE", str(role))
 
-    def leave(self, ledger_id) -> None:
-        """Block exit with pending involvement, balances or sole ownership."""
-        with self.database.write() as connection:
-            role = self.authorize(connection, ledger_id)
-            if role == "OWNER":
-                owners = connection.execute(
-                    "SELECT COUNT(*) FROM memberships WHERE ledger_id=? "
-                    "AND role='OWNER' AND active=1",
-                    (ledger_id,),
-                ).fetchone()[0]
-                if owners == 1:
-                    raise domain.ValidationError("唯一最高管理员须先转交身份")
-            rows = connection.execute(
-                "SELECT * FROM transactions WHERE ledger_id=? AND status NOT "
-                "IN ('COMPLETED','VOID','CANCELLED')",
+    @staticmethod
+    def _check_departure(connection, ledger_id, user_id):
+        """Protect outstanding work, cash balances and the final owner."""
+        target = connection.execute(
+            "SELECT m.role,u.member_code FROM memberships m JOIN users u "
+            "ON u.id=m.user_id WHERE m.ledger_id=? AND m.user_id=? "
+            "AND m.active=1",
+            (ledger_id, user_id),
+        ).fetchone()
+        if not target:
+            raise domain.ValidationError("该用户不是当前账本成员")
+        if target["role"] == "OWNER":
+            count = connection.execute(
+                "SELECT COUNT(*) FROM memberships WHERE ledger_id=? "
+                "AND role='OWNER' AND active=1",
                 (ledger_id,),
-            ).fetchall()
-            user_id = self.session.user_id
-            if any(
-                user_id in (row["applicant_id"], row["payer_id"])
-                or user_id in json.loads(row["participants"])
-                for row in rows
-            ):
-                raise domain.ValidationError("存在本人参与的未完成申请")
-            due = connection.execute(
-                "SELECT 1 FROM obligations WHERE ledger_id=? AND active=1 "
-                "AND amount_cent>settled_cent AND (debtor_id=? OR "
-                "creditor_id=?)",
-                (ledger_id, user_id, user_id),
-            ).fetchone()
-            if due:
-                raise domain.ValidationError("存在未结清款项")
+            ).fetchone()[0]
+            if count == 1:
+                raise domain.ValidationError("唯一最高管理须先转交身份")
+        pending = connection.execute(
+            "SELECT applicant_id,payer_id,participants FROM transactions "
+            "WHERE ledger_id=? AND status NOT IN "
+            "('COMPLETED','VOID','CANCELLED')",
+            (ledger_id,),
+        ).fetchall()
+        if any(
+            user_id in (row["applicant_id"], row["payer_id"])
+            or user_id in json.loads(row["participants"])
+            for row in pending
+        ):
+            raise domain.ValidationError("该成员存在未完成申请，须先处理")
+        due = connection.execute(
+            "SELECT 1 FROM obligations WHERE ledger_id=? AND active=1 "
+            "AND amount_cent>settled_cent AND (debtor_id=? OR creditor_id=?)",
+            (ledger_id, user_id, user_id),
+        ).fetchone()
+        if due:
+            raise domain.ValidationError("该成员存在未结清款项")
+        return target
+
+    def leave(self, ledger_id) -> None:
+        """Leave only after the current account's business is resolved."""
+        with self.database.write() as connection:
+            self.authorize(connection, ledger_id)
+            self._check_departure(connection, ledger_id, self.session.user_id)
             connection.execute(
-                "UPDATE memberships SET active=0 WHERE ledger_id=? AND "
-                "user_id=?",
+                "UPDATE memberships SET active=0 WHERE ledger_id=? "
+                "AND user_id=?",
+                (ledger_id, self.session.user_id),
+            )
+            self.audit(connection, ledger_id, self.session.user_id, "LEAVE")
+
+    def remove_member(self, ledger_id, user_id, reason) -> None:
+        """An OWNER may remove another settled member, preserving history."""
+        reason = domain.required(reason, "移出原因")
+        with self.database.write() as connection:
+            self.authorize(connection, ledger_id, "OWNER")
+            if user_id == self.session.user_id:
+                raise domain.ValidationError(
+                    "移出他人使用此操作；本人请使用退出账本"
+                )
+            target = self._check_departure(connection, ledger_id, user_id)
+            connection.execute(
+                "UPDATE memberships SET active=0 WHERE ledger_id=? "
+                "AND user_id=?",
                 (ledger_id, user_id),
             )
-            self.audit(connection, ledger_id, user_id, "LEAVE")
+            connection.execute(
+                "UPDATE invitations SET status='REVOKED' WHERE ledger_id=? "
+                "AND user_id=?",
+                (ledger_id, user_id),
+            )
+            self.audit(
+                connection,
+                ledger_id,
+                user_id,
+                "REMOVE_MEMBER",
+                f"{target['member_code']}: {reason}",
+            )
 
     def add_category(self, ledger_id, name, direction) -> str:
         """Add a direction-specific category without rewriting history."""

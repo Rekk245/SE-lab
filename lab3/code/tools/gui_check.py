@@ -4,6 +4,7 @@ import json
 import pathlib
 import tempfile
 from tkinter import ttk
+from unittest import mock
 
 from shared_ledger import database
 from shared_ledger import demo
@@ -37,6 +38,12 @@ def clipped_controls(app, page):
 
 def check_interactions(app):
     """Verify stage selection, correction preview and settlement filtering."""
+    assert tuple(app.member_tree["columns"]) == ("code", "name", "role")
+    for item in app.member_tree.get_children():
+        values = app.member_tree.item(item)["values"]
+        assert str(values[0]).startswith("SL")
+        assert str(values[1]) in {"张三", "李四", "王五", "赵六"}
+        assert "级" in str(values[2])
     app.workflow_picker.current(0)
     app.pick_workflow()
     app.root.update()
@@ -53,6 +60,44 @@ def check_interactions(app):
         assert app.settle_amount.get() == "200.00"
 
 
+def login_demo(app, username):
+    """Enter a generated test account through the application's login view."""
+    app.show_login()
+    app.username.set(username)
+    app.password.set(demo.PASSWORD)
+    app.login()
+    app.root.update()
+
+
+def check_invitation_ui(app):
+    """Exercise the actual invitation, acceptance and removal callbacks."""
+    login_demo(app, "张三")
+    assert len(app.member_tree.get_children()) == 4
+    app.invite_username.set("SL007")
+    app.invite_inline()
+    login_demo(app, "钱七")
+    assert app.ledger_id is None
+    invitation = app.invitation_tree.get_children()[0]
+    app.invitation_tree.selection_set(invitation)
+    app.accept()
+    assert len(app.member_tree.get_children()) == 5
+    assert app.remove_button.instate(["disabled"])
+    login_demo(app, "张三")
+    candidate = next(row for row in app.member_rows if row["member_code"] == "SL007")
+    app.member_tree.selection_set(candidate["id"])
+    with mock.patch("tkinter.simpledialog.askstring", return_value="界面验证"):
+        app.remove_member()
+    assert len(app.member_tree.get_children()) == 4
+    login_demo(app, "钱七")
+    assert app.ledger_id is None
+    assert not app.invitation_tree.get_children()
+
+
+def fail_dialog(_title, message, **_kwargs):
+    """Surface unexpected dialog errors in the unattended check."""
+    raise AssertionError(message)
+
+
 def main():
     """Check all four roles at default and minimum window dimensions."""
     result = []
@@ -66,11 +111,7 @@ def main():
         )
         try:
             for username, _name in demo.ACCOUNTS:
-                app.show_login()
-                app.username.set(username)
-                app.password.set(demo.PASSWORD)
-                app.login()
-                app.root.update()
+                login_demo(app, username)
                 for size in ("1440x940", "1240x820"):
                     app.root.geometry(size)
                     for index, page in enumerate(app.pages):
@@ -85,6 +126,8 @@ def main():
                             )
                         )
                 check_interactions(app)
+            with mock.patch("tkinter.messagebox.showerror", side_effect=fail_dialog):
+                check_invitation_ui(app)
         finally:
             app.root.destroy()
     print(json.dumps(result, ensure_ascii=False, indent=2))

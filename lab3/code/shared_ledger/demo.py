@@ -9,6 +9,13 @@ from shared_ledger import workflow
 
 PASSWORD = "Demo2026!"
 ACCOUNTS = (
+    ("张三", "张三"),
+    ("李四", "李四"),
+    ("王五", "王五"),
+    ("赵六", "赵六"),
+)
+CANDIDATE_ACCOUNTS = ("陈晨", "林悦", "钱七", "孙八")
+LEGACY_ACCOUNTS = (
     ("owner", "王紫涵"),
     ("admin", "审核管理员"),
     ("member", "普通成员"),
@@ -16,26 +23,98 @@ ACCOUNTS = (
 )
 
 
+def upgrade_demo_accounts(database):
+    """Rename only recognizable built-in demo accounts, retaining their IDs."""
+    with database.write() as connection:
+        candidates = []
+        for (old_username, old_name), (username, name) in zip(
+            LEGACY_ACCOUNTS, ACCOUNTS
+        ):
+            old = connection.execute(
+                "SELECT * FROM users WHERE username=? AND display_name=?",
+                (old_username, old_name),
+            ).fetchone()
+            if not old or old["password_hash"] != auth.password_hash(
+                PASSWORD, old["salt"]
+            ):
+                return False
+            if connection.execute(
+                "SELECT 1 FROM users WHERE username=?", (username,)
+            ).fetchone():
+                return False
+            candidates.append((username, name, old["id"]))
+        connection.executemany(
+            "UPDATE users SET username=?,display_name=? WHERE id=?", candidates
+        )
+    return True
+
+
+def create_demo_sessions(database):
+    """Create four human-named demo accounts and bind their service roles."""
+    authentication = auth.AuthService(database)
+    sessions = {}
+    for key, (username, name) in zip(
+        ("owner", "admin", "member", "reader"), ACCOUNTS
+    ):
+        authentication.register(username, name, PASSWORD)
+        sessions[key] = authentication.login(username, PASSWORD)
+    return sessions
+
+
+def ensure_candidate_accounts(database):
+    """Add account-only candidates to a recognized demo, never join a ledger."""
+    with database.read() as connection:
+        for username, name in ACCOUNTS:
+            user = connection.execute(
+                "SELECT * FROM users WHERE username=? AND display_name=?",
+                (username, name),
+            ).fetchone()
+            if not user or user["password_hash"] != auth.password_hash(
+                PASSWORD, user["salt"]
+            ):
+                return []
+    authentication = auth.AuthService(database)
+    result = []
+    for name in CANDIDATE_ACCOUNTS:
+        with database.read() as connection:
+            exists = connection.execute(
+                "SELECT 1 FROM users WHERE username=?", (name,)
+            ).fetchone()
+        if not exists:
+            authentication.register(name, name, PASSWORD)
+        with database.read() as connection:
+            result.append(
+                dict(
+                    connection.execute(
+                        "SELECT member_code,username,display_name FROM users "
+                        "WHERE username=?",
+                        (name,),
+                    ).fetchone()
+                )
+            )
+    return result
+
+
 def seed(database) -> dict:
     """Create demo data only in an empty database; never change real data."""
     with database.read() as connection:
-        if connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]:
-            return {
-                "created": False,
-                "reason": "数据库非空，跳过演示数据初始化",
-            }
-    authentication = auth.AuthService(database)
-    sessions = {}
-    for username, name in ACCOUNTS:
-        authentication.register(username, name, PASSWORD)
-        sessions[username] = authentication.login(username, PASSWORD)
+        populated = connection.execute("SELECT COUNT(*) FROM users").fetchone()[
+            0
+        ]
+    if populated:
+        upgraded = upgrade_demo_accounts(database)
+        return {
+            "created": False,
+            "demo_accounts_upgraded": upgraded,
+            "candidate_accounts": ensure_candidate_accounts(database),
+            "reason": "保留现有账目；更新内置演示账号和候选名单",
+        }
+    sessions = create_demo_sessions(database)
     owner = membership.MembershipService(database, sessions["owner"])
     ledger_id = owner.create_ledger("软件工程实践小组")
-    for username in ("admin", "member", "reader"):
-        invitation = owner.invite(ledger_id, username)
-        membership.MembershipService(database, sessions[username]).accept(
-            invitation
-        )
+    for key in ("admin", "member", "reader"):
+        invitation = owner.invite(ledger_id, sessions[key].username)
+        membership.MembershipService(database, sessions[key]).accept(invitation)
     owner.set_role(ledger_id, sessions["admin"].user_id, "ADMIN")
     owner.set_role(ledger_id, sessions["reader"].user_id, "READ_ONLY")
     applicant = workflow.WorkflowService(database, sessions["member"])
@@ -107,6 +186,7 @@ def seed(database) -> dict:
     queries.set_budget(ledger_id, today[:4], "3000")
     return {
         "created": True,
+        "candidate_accounts": ensure_candidate_accounts(database),
         "ledger_id": ledger_id,
         "income_id": income_id,
         "expense_ids": expense_ids,

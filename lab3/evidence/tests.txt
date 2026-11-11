@@ -28,14 +28,18 @@ test_member_cannot_approve (tests.test_ledger.LedgerTest.test_member_cannot_appr
 test_missing_invitation_target (tests.test_ledger.LedgerTest.test_missing_invitation_target) ... ok
 test_no_post_before_completion (tests.test_ledger.LedgerTest.test_no_post_before_completion) ... ok
 test_noncreator_cannot_invite (tests.test_ledger.LedgerTest.test_noncreator_cannot_invite) ... ok
+test_only_owner_can_remove_another_member (tests.test_ledger.LedgerTest.test_only_owner_can_remove_another_member) ... ok
 test_owner_must_explicitly_confirm (tests.test_ledger.LedgerTest.test_owner_must_explicitly_confirm) ... ok
 test_paid_edit_requires_refund_and_new_payment (tests.test_ledger.LedgerTest.test_paid_edit_requires_refund_and_new_payment) ... ok
 test_payment_must_match_approval (tests.test_ledger.LedgerTest.test_payment_must_match_approval) ... ok
 test_permission_revocation_applies_to_existing_session (tests.test_ledger.LedgerTest.test_permission_revocation_applies_to_existing_session) ... ok
+test_public_member_codes_are_stable_and_searchable (tests.test_ledger.LedgerTest.test_public_member_codes_are_stable_and_searchable) ... ok
 test_read_only_cannot_submit (tests.test_ledger.LedgerTest.test_read_only_cannot_submit) ... ok
 test_refund_prevents_posting (tests.test_ledger.LedgerTest.test_refund_prevents_posting) ... ok
 test_refund_required_before_cancel (tests.test_ledger.LedgerTest.test_refund_required_before_cancel) ... ok
 test_rejection_branches (tests.test_ledger.LedgerTest.test_rejection_branches) ... ok
+test_removal_blocks_unfinished_work_and_unpaid_debt (tests.test_ledger.LedgerTest.test_removal_blocks_unfinished_work_and_unpaid_debt) ... ok
+test_removal_preserves_posted_history (tests.test_ledger.LedgerTest.test_removal_preserves_posted_history) ... ok
 test_reprice_resets_approval (tests.test_ledger.LedgerTest.test_reprice_resets_approval) ... ok
 test_retention_unresolved_is_non_destructive (tests.test_ledger.LedgerTest.test_retention_unresolved_is_non_destructive) ... ok
 test_settlement_is_idempotent_and_not_new_expense (tests.test_ledger.LedgerTest.test_settlement_is_idempotent_and_not_new_expense) ... ok
@@ -46,10 +50,13 @@ test_twenty_competing_completions_only_one_posts (tests.test_ledger.LedgerTest.t
 test_unpaid_application_cancels (tests.test_ledger.LedgerTest.test_unpaid_application_cancels) ... ok
 test_void_requires_owner (tests.test_ledger.LedgerTest.test_void_requires_owner) ... ok
 test_void_settled_entry_preserves_cash_history (tests.test_ledger.LedgerTest.test_void_settled_entry_preserves_cash_history) ... ok
+test_candidate_invitation_removal_and_reinvitation (tests.test_ledger.ScaleAndDemoTest.test_candidate_invitation_removal_and_reinvitation) ... ok
 test_demo_matches_lab_two_totals (tests.test_ledger.ScaleAndDemoTest.test_demo_matches_lab_two_totals) ... ok
+test_old_database_gains_codes_without_losing_accounts (tests.test_ledger.ScaleAndDemoTest.test_old_database_gains_codes_without_losing_accounts) ... ok
+test_recognized_old_demo_names_upgrade_without_new_transactions (tests.test_ledger.ScaleAndDemoTest.test_recognized_old_demo_names_upgrade_without_new_transactions) ... ok
 test_two_hundred_members_have_individual_access (tests.test_ledger.ScaleAndDemoTest.test_two_hundred_members_have_individual_access) ... ok
 
 ----------------------------------------------------------------------
-Ran 50 tests in 146.952s
+Ran 57 tests in 187.272s
 
 OK

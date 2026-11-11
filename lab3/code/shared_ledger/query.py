@@ -134,7 +134,7 @@ class QueryService(base.BaseService):
                 connection,
                 ledger_id,
                 period,
-                "u.display_name || ' (' || u.username || ')'",
+                "u.display_name || ' (' || u.member_code || ')'",
             )
             shares = [
                 dict(row)

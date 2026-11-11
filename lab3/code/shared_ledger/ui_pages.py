@@ -20,7 +20,7 @@ class UiPagesMixin:
             books,
             [
                 ("name", "共享账本", 250),
-                ("role", "我的角色", 130),
+                ("role", "我的等级", 145),
             ],
             height=3,
         )
@@ -31,27 +31,33 @@ class UiPagesMixin:
             command=self.enter_ledger,
             style="Primary.TButton",
         ).pack(anchor="w")
-        members = design.card(left, "成员与权限", expand=True)
+        members = design.card(left, "成员与权限等级", expand=True)
         self.member_tree = self.tree(
             members,
             [
-                ("name", "成员", 135),
-                ("username", "账号", 105),
-                ("role", "账本角色", 125),
-                ("id", "用户 ID", 250),
+                ("code", "成员编号", 135),
+                ("name", "姓名", 180),
+                ("role", "等级", 180),
             ],
             height=5,
         )
         actions = design.row(members)
         self.role_combo = self.combo(
             actions,
-            "选中成员的新角色",
+            "选中成员的新等级",
             list(domain.ROLE_NAMES.values()),
             width=16,
         )
-        ttk.Button(actions, text="保存角色", command=self.set_role).pack(
+        ttk.Button(actions, text="保存等级", command=self.set_role).pack(
             side="left", anchor="s", pady=5
         )
+        self.remove_button = ttk.Button(
+            actions,
+            text="移出账本",
+            command=self.remove_member,
+            style="Danger.TButton",
+        )
+        self.remove_button.pack(side="left", anchor="s", padx=(8, 0), pady=5)
         create = design.card(right, "创建共享账本")
         self.new_ledger_name = self.field(
             design.row(create), "账本名称 *", width=29
@@ -64,7 +70,7 @@ class UiPagesMixin:
         ).pack(fill="x", pady=(10, 0))
         invites = design.card(right, "邀请与退出")
         self.invite_username = self.field(
-            design.row(invites), "搜索账号或用户 ID", width=29
+            design.row(invites), "搜索账号或成员编号（如 SL002）", width=29
         )
         ttk.Button(
             invites,

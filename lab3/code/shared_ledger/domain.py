@@ -54,10 +54,10 @@ class Status(enum.StrEnum):
 
 
 ROLE_NAMES = {
-    "READ_ONLY": "只读成员",
-    "MEMBER": "普通成员",
-    "ADMIN": "管理员",
-    "OWNER": "最高管理员",
+    "READ_ONLY": "1级 · 只读",
+    "MEMBER": "2级 · 普通",
+    "ADMIN": "3级 · 管理",
+    "OWNER": "4级 · 最高管理",
 }
 STATUS_NAMES = {
     "APPLICATION": "申请",
@@ -165,6 +165,7 @@ class Session:
     user_id: str
     username: str
     display_name: str
+    member_code: str = ""
 
 
 @dataclasses.dataclass(frozen=True)

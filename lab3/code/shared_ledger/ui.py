@@ -262,10 +262,9 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
                 (
                     row["id"],
                     (
-                        row["username"],
+                        row["member_code"],
                         row["display_name"],
                         domain.ROLE_NAMES[row["role"]],
-                        row["id"],
                     ),
                 )
                 for row in self.member_rows
@@ -273,7 +272,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         )
         self.participants.delete(0, "end")
         labels = [
-            f"{row['display_name']} ({row['username']})"
+            f"{row['display_name']} · {row['member_code']}"
             for row in self.member_rows
         ]
         for label in labels:
@@ -299,6 +298,9 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
             row["role"]
             for row in self.member_rows
             if row["id"] == self.session.user_id
+        )
+        self.remove_button.configure(
+            state="normal" if role == "OWNER" else "disabled"
         )
         if role in ("ADMIN", "OWNER"):
             self.load_audit()
@@ -538,6 +540,26 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         role = list(domain.ROLE_NAMES)[self.role_combo.current()]
         self.membership.set_role(self.require_ledger(), selection[0], role)
         self.refresh()
+
+    @guarded
+    def remove_member(self):
+        """Remove another member only through the highest-grade service rule."""
+        selected = self.member_tree.selection()
+        if not selected:
+            raise domain.ValidationError("请先选择要移出的成员")
+        target = next(
+            row for row in self.member_rows if row["id"] == selected[0]
+        )
+        reason = simpledialog.askstring(
+            "移出账本",
+            f"移出 {target['member_code']} · {target['display_name']} 的原因",
+            parent=self.root,
+        )
+        if reason is not None:
+            self.membership.remove_member(
+                self.require_ledger(), target["id"], reason
+            )
+            self.refresh()
 
     @guarded
     def approve(self):

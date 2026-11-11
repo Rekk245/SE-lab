@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
+    member_code TEXT NOT NULL UNIQUE,
     salt TEXT NOT NULL,
     password_hash TEXT NOT NULL
 );
@@ -161,7 +162,7 @@ CREATE INDEX IF NOT EXISTS audit_ledger_time
     ON audit_events(ledger_id, created_at);
 CREATE INDEX IF NOT EXISTS obligation_ledger
     ON obligations(ledger_id, active);
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 """
 
 
@@ -174,6 +175,32 @@ class Database:
         with contextlib.closing(self.connect()) as connection:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.executescript(SCHEMA)
+        self._upgrade_member_codes()
+
+    def _upgrade_member_codes(self):
+        """Assign old accounts public numbers without changing references."""
+        with self.write() as connection:
+            columns = {
+                row["name"]
+                for row in connection.execute("PRAGMA table_info(users)")
+            }
+            if "member_code" not in columns:
+                connection.execute(
+                    "ALTER TABLE users ADD COLUMN member_code TEXT"
+                )
+                users = connection.execute(
+                    "SELECT id FROM users ORDER BY rowid"
+                ).fetchall()
+                for index, user in enumerate(users, 1):
+                    connection.execute(
+                        "UPDATE users SET member_code=? WHERE id=?",
+                        (f"SL{index:03d}", user["id"]),
+                    )
+            connection.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS user_member_code "
+                "ON users(member_code)"
+            )
+            connection.execute("PRAGMA user_version=2")
 
     def connect(self) -> sqlite3.Connection:
         """Open a connection enforcing foreign keys and a bounded lock wait."""

@@ -1,49 +1,71 @@
 {
   "created": true,
-  "ledger_id": "3c9523b96e7c4942bc2e8ea76882a402",
-  "income_id": "735c4b7aefaa45c883d08729b15e8157",
-  "expense_ids": [
-    "37e90961566243e38f6a8a05ef6a05c0",
-    "cb71958f79aa4d8db5c806df0431d4e5"
+  "candidate_accounts": [
+    {
+      "member_code": "SL005",
+      "username": "é™ˆæ™¨",
+      "display_name": "é™ˆæ™¨"
+    },
+    {
+      "member_code": "SL006",
+      "username": "æ—æ‚¦",
+      "display_name": "æ—æ‚¦"
+    },
+    {
+      "member_code": "SL007",
+      "username": "é’±ä¸ƒ",
+      "display_name": "é’±ä¸ƒ"
+    },
+    {
+      "member_code": "SL008",
+      "username": "å­™å…«",
+      "display_name": "å­™å…«"
+    }
   ],
-  "pending_id": "b4a8ccbcf9314aa193a6121f4a3b1f28",
+  "ledger_id": "67e0df096e4e49db95f72d2de14730b6",
+  "income_id": "bd30c655d26848ec9b5a7342cc29ce48",
+  "expense_ids": [
+    "5a6d0470dac84d4cb011d0eb4ee199a6",
+    "d808f05ba83e42b5b50e57705b3f42c3"
+  ],
+  "pending_id": "8d49a18bb95e410a96ac7cdeac8dd7a1",
   "summary": {
     "income": 50000,
     "expense": 32000,
     "net": 18000,
     "categories": [
       {
-        "label": "×ÊÁÏ",
+        "label": "èµ„æ–™",
         "total": 20000
       },
       {
-        "label": "Ê³Æ·",
+        "label": "é£Ÿå“",
         "total": 12000
       }
     ],
     "applicants": [
       {
-        "label": "ÆÕÍ¨³ÉÔ± (member)",
+        "label": "ç‹äº” (SL003)",
         "total": 32000
       }
     ],
     "shares": [
       {
-        "id": "1a6ac2f2c0f6422eadc88341925e83e4",
-        "display_name": "ÉóºË¹ÜÀíÔ±",
+        "id": "21add79c1a3a4f9da8f7f80092502711",
+        "display_name": "å¼ ä¸‰",
         "total": 4000
       },
       {
-        "id": "406b5e51789849fb9e56e7c05d817143",
-        "display_name": "ÆÕÍ¨³ÉÔ±",
+        "id": "ca908b97753f41cbb9000fa786dc9f71",
+        "display_name": "æå››",
         "total": 4000
       },
       {
-        "id": "ad94f4b2f8554bd98a726ff11f6119b7",
-        "display_name": "Íõ×Ïº­",
+        "id": "6f383b08d997450aac676e0240b5707b",
+        "display_name": "ç‹äº”",
         "total": 4000
       }
     ],
-    "coverage": "ÍêÕû£ºµ±Ç°ÉĞÎ´Ö´ĞĞÃ÷Ï¸ÇåÀí"
+    "coverage": "å®Œæ•´ï¼šå½“å‰å°šæœªæ‰§è¡Œæ˜ç»†æ¸…ç†"
   }
 }

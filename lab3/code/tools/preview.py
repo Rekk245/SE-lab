@@ -15,7 +15,7 @@ def main():
     store = database.Database(args.db)
     demo.seed(store)
     app = ui.LedgerApp(store)
-    app.username.set("owner")
+    app.username.set(demo.ACCOUNTS[0][0])
     app.password.set(demo.PASSWORD)
     app.login()
     app.run()

@@ -5,6 +5,7 @@ import csv
 import io
 import json
 import pathlib
+import sqlite3
 import tempfile
 import unittest
 
@@ -148,6 +149,23 @@ class LedgerTest(unittest.TestCase):
     def test_duplicate_account_rejected(self):
         with self.assertRaises(domain.ValidationError):
             self.auth.register("owner", "other", "password-2026")
+
+    def test_public_member_codes_are_stable_and_searchable(self):
+        members = self.owner.members(self.ledger)
+        self.assertEqual(
+            {row["member_code"] for row in members},
+            {"SL001", "SL002", "SL003", "SL004"},
+        )
+        self.owner.set_role(self.ledger, self.uid("member"), "ADMIN")
+        self.assertEqual(
+            self.auth.login("member", "password-2026").member_code, "SL003"
+        )
+        self.auth.register("张三", "张三", "password-2026")
+        invited = self.auth.login("张三", "password-2026")
+        self.assertEqual(invited.member_code, "SL005")
+        invitation = self.owner.invite(self.ledger, "SL005")
+        membership.MembershipService(self.db, invited).accept(invitation)
+        self.assertEqual(len(self.owner.members(self.ledger)), 5)
 
     def test_invitation_is_recipient_only(self):
         self.auth.register("new", "new", "password-2026")
@@ -548,6 +566,47 @@ class LedgerTest(unittest.TestCase):
         with self.assertRaises(domain.ValidationError):
             self.owner.set_role(self.ledger, self.uid("owner"), "MEMBER")
 
+    def test_only_owner_can_remove_another_member(self):
+        manager = membership.MembershipService(self.db, self.sessions["admin"])
+        with self.assertRaises(domain.PermissionDenied):
+            manager.remove_member(self.ledger, self.uid("reader"), "test")
+        with self.assertRaises(domain.ValidationError):
+            self.owner.remove_member(self.ledger, self.uid("owner"), "self")
+        self.owner.remove_member(
+            self.ledger, self.uid("reader"), "no longer participating"
+        )
+        with self.assertRaises(domain.PermissionDenied):
+            query.QueryService(self.db, self.sessions["reader"]).transactions(
+                self.ledger
+            )
+
+    def test_removal_blocks_unfinished_work_and_unpaid_debt(self):
+        transaction_id = self.expense()
+        with self.assertRaises(domain.ValidationError):
+            self.owner.remove_member(self.ledger, self.uid("member"), "pending")
+        self.w.cancel(transaction_id, 1)
+        self.posted()
+        with self.assertRaises(domain.ValidationError):
+            self.owner.remove_member(self.ledger, self.uid("member"), "debt")
+
+    def test_removal_preserves_posted_history(self):
+        transaction_id = self.posted()
+        debt = self.q.obligations(self.ledger)[0]
+        self.s.settle(
+            debt["id"], 1, "120", "2026-11-11", "paid", "remove-settle"
+        )
+        self.owner.remove_member(
+            self.ledger, self.uid("member"), "settled and leaving"
+        )
+        self.assertEqual(self.q.detail(transaction_id)["status"], "COMPLETED")
+        self.assertEqual(self.q.summary(self.ledger)["expense"], 12000)
+        self.assertEqual(
+            self.q.audit_events(self.ledger, action="REMOVE_MEMBER")[0][
+                "summary"
+            ],
+            "SL003: settled and leaving",
+        )
+
     def test_backup_and_reopen(self):
         self.posted()
         destination = pathlib.Path(self.directory.name) / "backup.db"
@@ -612,6 +671,123 @@ class LedgerTest(unittest.TestCase):
 
 class ScaleAndDemoTest(unittest.TestCase):
     """Verify the documented sample and the confirmed 200-member scale."""
+
+    def test_candidate_invitation_removal_and_reinvitation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db = database.Database(pathlib.Path(directory) / "demo.db")
+            seeded = demo.seed(db)
+            authentication = auth.AuthService(db)
+            owner = authentication.login("张三", demo.PASSWORD)
+            candidate = authentication.login("钱七", demo.PASSWORD)
+            other = authentication.login("孙八", demo.PASSWORD)
+            self.assertEqual(
+                (candidate.member_code, other.member_code), ("SL007", "SL008")
+            )
+            manager = membership.MembershipService(db, owner)
+            ledger_id = seeded["ledger_id"]
+            self.assertEqual(len(manager.members(ledger_id)), 4)
+            recipient = membership.MembershipService(db, candidate)
+            self.assertEqual(recipient.ledgers(), [])
+            invitation = manager.invite(ledger_id, "SL007")
+            recipient.accept(invitation)
+            self.assertEqual(len(manager.members(ledger_id)), 5)
+            manager.remove_member(
+                ledger_id, candidate.user_id, "invitation demo"
+            )
+            self.assertEqual(recipient.ledgers(), [])
+            with self.assertRaises(domain.PermissionDenied):
+                query.QueryService(db, candidate).transactions(ledger_id)
+            with self.assertRaises(domain.PermissionDenied):
+                recipient.accept(invitation)
+            recipient.accept(manager.invite(ledger_id, "SL007"))
+            self.assertEqual(
+                authentication.login("钱七", demo.PASSWORD).member_code, "SL007"
+            )
+            self.assertEqual(len(manager.members(ledger_id)), 5)
+            self.assertEqual(
+                membership.MembershipService(db, other).ledgers(), []
+            )
+
+    def test_old_database_gains_codes_without_losing_accounts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "old.db"
+            connection = sqlite3.connect(path)
+            try:
+                connection.execute(
+                    "CREATE TABLE users(id TEXT PRIMARY KEY, "
+                    "username TEXT UNIQUE,display_name TEXT,"
+                    "salt TEXT,password_hash TEXT)"
+                )
+                salt = "00" * 16
+                connection.execute(
+                    "INSERT INTO users VALUES (?,?,?,?,?)",
+                    (
+                        "legacy-id",
+                        "张三",
+                        "张三",
+                        salt,
+                        auth.password_hash("legacy-password", salt),
+                    ),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            db = database.Database(path)
+            authentication = auth.AuthService(db)
+            session = authentication.login("张三", "legacy-password")
+            self.assertEqual(
+                (session.user_id, session.member_code), ("legacy-id", "SL001")
+            )
+            authentication.register("李四", "李四", "legacy-password")
+            self.assertEqual(
+                authentication.login("李四", "legacy-password").member_code,
+                "SL002",
+            )
+
+    def test_recognized_old_demo_names_upgrade_without_new_transactions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db = database.Database(pathlib.Path(directory) / "demo.db")
+            result = demo.seed(db)
+            with db.write() as connection:
+                original_ids = [
+                    row[0]
+                    for row in connection.execute(
+                        "SELECT id FROM users ORDER BY member_code"
+                    )
+                ]
+                for (username, _name), (old_username, old_name) in zip(
+                    demo.ACCOUNTS, demo.LEGACY_ACCOUNTS
+                ):
+                    connection.execute(
+                        "UPDATE users SET username=?,display_name=? "
+                        "WHERE username=?",
+                        (old_username, old_name, username),
+                    )
+            upgraded = demo.seed(db)
+            self.assertTrue(upgraded["demo_accounts_upgraded"])
+            owner = auth.AuthService(db).login("张三", demo.PASSWORD)
+            self.assertEqual(
+                query.QueryService(db, owner).summary(result["ledger_id"])[
+                    "expense"
+                ],
+                32000,
+            )
+            with db.read() as connection:
+                self.assertEqual(
+                    [
+                        row[0]
+                        for row in connection.execute(
+                            "SELECT id FROM users ORDER BY member_code"
+                        )
+                    ],
+                    original_ids,
+                )
+                self.assertEqual(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM transactions"
+                    ).fetchone()[0],
+                    4,
+                )
 
     def test_demo_matches_lab_two_totals(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -33,14 +33,21 @@ class AuthService:
         user_id = domain.identifier()
         try:
             with self.database.write() as connection:
+                next_number = connection.execute(
+                    "SELECT COALESCE(MAX(CAST(substr(member_code,3) "
+                    "AS INTEGER)),0)+1 FROM users"
+                ).fetchone()[0]
+                member_code = f"SL{next_number:03d}"
                 connection.execute(
-                    "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO users(id,username,display_name,salt,"
+                    "password_hash,member_code) VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         user_id,
                         username,
                         name,
                         salt,
                         password_hash(password, salt),
+                        member_code,
                     ),
                 )
         except sqlite3.IntegrityError as error:
@@ -60,5 +67,8 @@ class AuthService:
         ):
             raise domain.PermissionDenied("账号或密码错误")
         return domain.Session(
-            user["id"], user["username"], user["display_name"]
+            user["id"],
+            user["username"],
+            user["display_name"],
+            user["member_code"],
         )
