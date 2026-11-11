@@ -21,3 +21,16 @@ git status --short 输出为空；从原基线到实现提交，lab1 的差异�
 
 本记录随后作为独立证据提交保存；后续证据提交不改变上述应用实现。
 验证日期：2026-11-11（Asia/Shanghai）
+
+最终应用更新：稳定成员编号、中文账号、四个未加入账本的候选账号、受权限约束的移出与重新邀请。
+应用提交：50bac339a0d5b9f3a34454a85205129a823bf5c6
+
+git push origin main
+To https://github.com/Rekk245/SE-lab.git
+   a701992..50bac33  main -> main
+
+git ls-remote origin refs/heads/main
+50bac339a0d5b9f3a34454a85205129a823bf5c6 refs/heads/main
+
+核对结果：最终应用提交已推送，远端提交编号与本地一致；实验一无差异。
+最终验证：57 项业务测试通过，48 组界面边界检查及邀请—接受—移出交互通过。
