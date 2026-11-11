@@ -4,6 +4,7 @@ import json
 import pathlib
 import tempfile
 from tkinter import ttk
+from types import SimpleNamespace
 from unittest import mock
 
 from shared_ledger import database
@@ -73,13 +74,6 @@ def check_interactions(app):
         assert str(values[0]).startswith("SL")
         assert str(values[1]) in {"张三", "李四", "王五", "赵六"}
         assert "级" in str(values[2])
-    app.workflow_picker.current(0)
-    app.pick_workflow()
-    app.root.update()
-    assert app.flow_row is not None
-    app.correction_amount.set("180")
-    app.root.update()
-    assert len(app.correction_preview.get_children()) == 3
     app.settlement_mode.current(2)
     app.filter_obligations()
     assert all(row["mode"] == "TEAM" for row in app.obligation_rows.values())
@@ -87,6 +81,61 @@ def check_interactions(app):
         app.obligation_tree.selection_set(next(iter(app.obligation_rows)))
         app.select_obligation()
         assert app.settle_amount.get() == "200.00"
+
+
+def check_record_associations(app):
+    """Exercise filtered navigation and correction of an independently picked entry."""
+    login_demo(app, "张三")
+    rows = app.query.transactions(app.ledger_id)
+    pending = next(row for row in rows if row["status"] == "APPLICATION")
+    completed = [row for row in rows if row["status"] == "COMPLETED"]
+    app.navigate(1)
+    app.maximum.set("80")
+    app.load_transactions()
+    app.root.update()
+    assert app.transaction_tree.get_children() == (pending["id"],)
+
+    app.navigate(2)
+    assert {row["id"] for row in app.workflow_rows} == {
+        row["id"] for row in rows
+    }
+    index = app.workflow_rows.index(completed[0])
+    app.workflow_picker.current(index)
+    app.pick_workflow()
+    assert app.selected_workflow()["id"] == completed[0]["id"]
+    assert app.transaction_tree.get_children() == (pending["id"],)
+
+    app.navigate(1)
+    app.root.update()
+    box = app.transaction_tree.bbox(pending["id"])
+    app.open_review(SimpleNamespace(y=box[1] + 1))
+    assert app.notebook.index(app.notebook.select()) == 2
+    assert app.selected_workflow()["id"] == pending["id"]
+    assert len(app.workflow_rows) == len(rows)
+    app.approve()
+    assert app.query.detail(pending["id"])["status"] != pending["status"]
+
+    app.navigate(5)
+    assert all(
+        button.instate(["disabled"]) for button in app.correction_actions
+    )
+    assert not app.correction_preview.get_children()
+    target = completed[1]
+    app.correction_picker.current(app.correction_rows.index(target))
+    app.pick_correction()
+    assert all(
+        button.instate(["!disabled"]) for button in app.correction_actions
+    )
+    app.correction_amount.set("180")
+    app.correction_reason.set("界面验证")
+    assert len(app.correction_preview.get_children()) == 3
+    app.correct()
+    assert app.query.detail(target["id"])["status"] == "VOID"
+    assert app.query.detail(completed[0]["id"])["status"] == "COMPLETED"
+    assert any(
+        row["correction_of"] == target["id"] and row["amount_cent"] == 18000
+        for row in app.query.transactions(app.ledger_id)
+    )
 
 
 def login_demo(app, username):
@@ -154,7 +203,9 @@ def main():
                         app.root.update()
                         viewport = page.master
                         member_count = (
-                            visible_members(app, viewport) if index == 0 else None
+                            visible_members(app, viewport)
+                            if index == 0
+                            else None
                         )
                         assert member_count in (None, 4), size
                         scrollable = viewport.yview()[1] < 1
@@ -179,6 +230,7 @@ def main():
             with mock.patch(
                 "tkinter.messagebox.showerror", side_effect=fail_dialog
             ):
+                check_record_associations(app)
                 check_invitation_ui(app)
         finally:
             app.root.destroy()

@@ -132,9 +132,6 @@ class UiPagesMixin:
             ],
             height=5,
         )
-        self.transaction_tree.bind(
-            "<<TreeviewSelect>>", self.select_transaction
-        )
         self.transaction_tree.bind("<Double-1>", self.open_review)
         ttk.Label(
             listing, text="双击账目进入申请详情与审批。", style="Muted.TLabel"
@@ -414,13 +411,12 @@ class UiPagesMixin:
             self.pages[5], proportion=1, right_width=410
         )
         correction = design.card(left, "已入账更正", expand=True)
-        self.correction_caption = ttk.Label(
-            correction,
-            text="在收支页选择一笔已完成记录",
-            style="Muted.TLabel",
-            wraplength=350,
+        self.correction_picker = self.combo(
+            design.row(correction), "关联已入账账目 *", [], width=27
         )
-        self.correction_caption.pack(anchor="w", pady=(5, 15))
+        self.correction_picker.bind(
+            "<<ComboboxSelected>>", self.pick_correction
+        )
         self.correction_preview = self.tree(
             correction,
             [
@@ -438,18 +434,21 @@ class UiPagesMixin:
         self.correction_reason = self.field(
             design.row(correction), "更正 / 作废原因 *", width=27
         )
-        ttk.Button(
+        correct_button = ttk.Button(
             correction,
             text="作废并建立更正申请",
             command=self.correct,
             style="Primary.TButton",
-        ).pack(fill="x", pady=(8, 4))
-        ttk.Button(
+        )
+        correct_button.pack(fill="x", pady=(8, 4))
+        void_button = ttk.Button(
             correction,
             text="仅作废原入账",
             command=self.void,
             style="Danger.TButton",
-        ).pack(fill="x", pady=(0, 12))
+        )
+        void_button.pack(fill="x", pady=(0, 6))
+        self.correction_actions = (correct_button, void_button)
         ttk.Label(
             correction,
             text="新金额重新审核后入账；已结现金保留原记录。",
@@ -461,7 +460,7 @@ class UiPagesMixin:
             text="查看数据保留策略",
             command=self.retention,
             style="Quiet.TButton",
-        ).pack(anchor="w", pady=(18, 0))
+        ).pack(anchor="w", pady=(8, 0))
         audit = design.card(right, "关键操作日志", expand=True)
         filters = design.row(audit)
         self.audit_actor = self.combo(filters, "操作人", ["全部"], width=18)

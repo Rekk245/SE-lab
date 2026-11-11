@@ -232,33 +232,45 @@ class UiPresenterMixin:
             value.set("")
         self.load_transactions()
 
-    def open_review(self, _event=None):
-        """Open the selected record without changing the displayed version."""
-        if self.transaction_tree.selection():
-            self.navigate(2)
-
-    def refresh_workflow_picker(self):
-        """Offer the currently displayed records as readable stage choices."""
-        self.workflow_rows = list(self.transaction_rows.values())
+    def refresh_workflow_picker(self, rows):
+        """Offer the current ledger's transactions for review."""
+        self.workflow_rows = rows
         self.workflow_picker.configure(
             values=[
-                f"{row['title']} · {domain.STATUS_NAMES[row['status']]}"
-                for row in self.workflow_rows
+                f"{row['title']} · {domain.STATUS_NAMES[row['status']]} "
+                f"· {row['id'][:8]}"
+                for row in rows
             ]
         )
         self.workflow_picker.set("")
+        self.show_detail(None)
 
-    def pick_workflow(self, _event=None):
-        """Link the review-page selection to the original cached table row."""
-        index = self.workflow_picker.current()
-        if index >= 0:
-            transaction_id = self.workflow_rows[index]["id"]
-            self.transaction_tree.selection_set(transaction_id)
-            self.transaction_tree.see(transaction_id)
-            self.show_detail(self.query.detail(transaction_id))
+    def refresh_correction_picker(self, rows):
+        """Offer posted entries that are still eligible for reversal."""
+        self.correction_rows = [
+            row for row in rows if row["status"] == "COMPLETED"
+        ]
+        self.correction_picker.configure(
+            values=[
+                f"{row['title']} · ¥{domain.format_money(row['amount_cent'])}"
+                f" · {row['id'][:8]}"
+                for row in self.correction_rows
+            ]
+        )
+        self.correction_picker.set("")
+        self.pick_correction()
+
+    def pick_correction(self, _event=None):
+        """Start a new correction draft for the linked entry."""
+        selected = self.correction_picker.current() >= 0
+        self.correction_amount.set("")
+        self.correction_reason.set("")
+        for button in self.correction_actions:
+            button.configure(state="normal" if selected else "disabled")
+        self.update_correction_preview()
 
     def present_selection(self, row):
-        """Update the stage strip and correction card using selected facts."""
+        """Update the stage strip and caption for the review selection."""
         self.flow_row = row
         self.redraw_flow()
         caption = (
@@ -270,8 +282,6 @@ class UiPresenterMixin:
             else "尚未选择账目"
         )
         self.selection_caption.configure(text=caption)
-        self.correction_caption.configure(text=caption)
-        self.update_correction_preview()
 
     def redraw_flow(self, _event=None):
         """Draw the four normal stages and distinguish terminal branches."""
@@ -445,10 +455,11 @@ class UiPresenterMixin:
 
     def update_correction_preview(self, *_args):
         """Preview original and reversal amounts without changing any data."""
-        row = self.flow_row
-        if not row:
+        index = self.correction_picker.current()
+        if index < 0:
             self.fill_tree(self.correction_preview, [])
             return
+        row = self.correction_rows[index]
         values = [
             (
                 "original",

@@ -268,7 +268,9 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         self.obligation_rows = {}
         self.member_rows = []
         self.category_rows = []
-        self.show_detail(None)
+        rows = self.query.transactions(self.ledger_id) if self.ledger_id else []
+        self.refresh_workflow_picker(rows)
+        self.refresh_correction_picker(rows)
         if not self.ledger_id:
             self.banner.configure(text="尚未加入账本：可创建账本或接受下方邀请")
             self.clear_metrics()
@@ -382,8 +384,6 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
             self.transaction_tree,
             [(row["id"], domain.transaction_cells(row)) for row in rows],
         )
-        self.refresh_workflow_picker()
-        self.show_detail(None)
 
     def selected(self):
         """Return the displayed record; never silently replace its version."""
@@ -393,10 +393,41 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         return self.transaction_rows[selection[0]]
 
     @guarded
-    def select_transaction(self, _event=None):
-        """Display readable detail for the table selection."""
-        selection = self.transaction_tree.selection()
-        self.show_detail(self.query.detail(selection[0]) if selection else None)
+    def open_review(self, event=None):
+        """Open the double-clicked entry in the independent review picker."""
+        if event is None:
+            selected = self.transaction_tree.selection()
+            transaction_id = selected[0] if selected else ""
+        else:
+            transaction_id = self.transaction_tree.identify_row(event.y)
+        if not transaction_id:
+            return
+        self.refresh_workflow_picker(
+            self.query.transactions(self.require_ledger())
+        )
+        for index, row in enumerate(self.workflow_rows):
+            if row["id"] == transaction_id:
+                self.workflow_picker.current(index)
+                self.pick_workflow()
+                self.navigate(2)
+                return
+
+    @guarded
+    def pick_workflow(self, _event=None):
+        """Display detail for the chosen review entry."""
+        index = self.workflow_picker.current()
+        self.show_detail(None)
+        if index >= 0:
+            self.show_detail(self.query.detail(self.workflow_rows[index]["id"]))
+
+    def selected_workflow(self):
+        """Use the exact entry and version shown in the review details."""
+        index = self.workflow_picker.current()
+        if index < 0 or not self.flow_row:
+            raise domain.ValidationError("请先在申请与审批中选择一笔账目")
+        if self.flow_row["id"] != self.workflow_rows[index]["id"]:
+            raise domain.ValidationError("请重新选择账目并核对详情")
+        return self.flow_row
 
     def show_detail(self, row):
         """Describe approval versions, payment facts, evidence and shares."""
@@ -583,14 +614,14 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     @guarded
     def approve(self):
         """Approve the displayed expense application."""
-        row = self.selected()
+        row = self.selected_workflow()
         self.workflow.approve(row["id"], row["version"])
         self.refresh()
 
     @guarded
     def reject(self):
         """Reject the current review while retaining the appropriate stage."""
-        row = self.selected()
+        row = self.selected_workflow()
         reason = simpledialog.askstring(
             "审核驳回", "驳回原因", parent=self.root
         )
@@ -601,7 +632,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     @guarded
     def record_payment(self):
         """Record the actual amount and selected payer."""
-        row = self.selected()
+        row = self.selected_workflow()
         amount = simpledialog.askstring(
             "实际付款", "实际金额/元", parent=self.root
         )
@@ -620,7 +651,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     @guarded
     def confirm_used(self):
         """Confirm that the paid goods have been used."""
-        row = self.selected()
+        row = self.selected_workflow()
         note = simpledialog.askstring(
             "确认使用", "完成/报销说明（可留空）", parent=self.root
         )
@@ -631,14 +662,14 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     @guarded
     def complete(self):
         """Explicitly review completion, even for the OWNER account."""
-        row = self.selected()
+        row = self.selected_workflow()
         self.posting.complete(row["id"], row["version"], domain.identifier())
         self.refresh()
 
     @guarded
     def refund(self):
         """Record a full refund confirmed outside this application."""
-        row = self.selected()
+        row = self.selected_workflow()
         reason = simpledialog.askstring(
             "退款到账并核平", "已核对的到账及核平说明", parent=self.root
         )
@@ -649,7 +680,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     @guarded
     def cancel(self):
         """Cancel the applicant's selected unfinished transaction."""
-        row = self.selected()
+        row = self.selected_workflow()
         self.workflow.cancel(row["id"], row["version"])
         self.refresh()
 
@@ -774,7 +805,10 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
 
     def reverse_selected(self, correction):
         """Collect a reason and optional new amount before atomic reversal."""
-        row = self.selected()
+        index = self.correction_picker.current()
+        if index < 0:
+            raise domain.ValidationError("请先关联一笔已入账账目")
+        row = self.correction_rows[index]
         reason = self.correction_reason.get()
         amount = self.correction_amount.get() if correction else None
         self.posting.void(
