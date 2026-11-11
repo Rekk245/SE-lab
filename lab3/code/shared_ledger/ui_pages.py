@@ -22,7 +22,7 @@ class UiPagesMixin:
                 ("name", "共享账本", 250),
                 ("role", "我的等级", 145),
             ],
-            height=3,
+            height=2,
         )
         self.book_tree.bind("<Double-1>", self.enter_ledger)
         ttk.Button(
@@ -39,7 +39,7 @@ class UiPagesMixin:
                 ("name", "姓名", 180),
                 ("role", "等级", 180),
             ],
-            height=5,
+            height=6,
         )
         actions = design.row(members)
         self.role_combo = self.combo(
@@ -67,29 +67,27 @@ class UiPagesMixin:
             text="创建账本",
             command=self.create_ledger_inline,
             style="Primary.TButton",
-        ).pack(fill="x", pady=(10, 0))
+        ).pack(fill="x", pady=(5, 0))
         invites = design.card(right, "邀请与退出")
         self.invite_username = self.field(
             design.row(invites), "搜索账号或成员编号（如 SL002）", width=29
         )
+        invite_actions = design.row(invites)
         ttk.Button(
-            invites,
+            invite_actions,
             text="发送普通成员邀请",
             command=self.invite_inline,
             style="Primary.TButton",
-        ).pack(fill="x", pady=(10, 10))
-        ttk.Label(
-            invites, text="受邀用户接受后加入当前账本。", style="Muted.TLabel"
-        ).pack(anchor="w")
+        ).pack(side="left", pady=3)
         ttk.Button(
-            invites,
+            invite_actions,
             text="退出当前账本",
             command=self.leave,
             style="Danger.TButton",
-        ).pack(fill="x", pady=(14, 0))
+        ).pack(side="left", padx=(6, 0))
         incoming = design.card(right, "收到的邀请", expand=True)
         self.invitation_tree = self.tree(
-            incoming, [("ledger", "账本名称", 240)], height=2
+            incoming, [("ledger", "账本名称", 240)], height=1
         )
         ttk.Button(incoming, text="接受选中邀请", command=self.accept).pack(
             fill="x"
@@ -97,7 +95,7 @@ class UiPagesMixin:
 
     def build_transactions(self):
         """Use a wide query card and a compact independent entry card."""
-        left, right = design.columns(self.pages[1], right_width=365)
+        left, right = design.columns(self.pages[1], right_width=310)
         listing = design.card(left, "查询与账目列表", expand=True)
         filters = design.row(listing)
         self.filter_category = self.combo(filters, "类别", ["全部"], width=15)
@@ -132,7 +130,7 @@ class UiPagesMixin:
                 ("date", "业务日期", 110),
                 ("status", "阶段", 100),
             ],
-            height=7,
+            height=5,
         )
         self.transaction_tree.bind(
             "<<TreeviewSelect>>", self.select_transaction
@@ -144,18 +142,19 @@ class UiPagesMixin:
         form = design.card(right, "新增收支", expand=True)
         choices = design.row(form)
         self.direction = self.combo(
-            choices, "收支方向", ["支出", "收入"], width=10
+            choices, "收支方向", ["支出", "收入"], width=7
         )
         self.direction.bind("<<ComboboxSelected>>", self.update_categories)
         self.mode = self.combo(
-            choices, "承担模式", ["团队统一支出", "部分成员均摊"], width=16
+            choices, "承担模式", ["团队统一支出", "部分成员均摊"], width=13
         )
-        self.title = self.field(design.row(form), "摘要 *", width=32)
+        summary_row = design.row(form)
+        self.title = self.field(summary_row, "摘要 *", width=16)
+        self.category = self.combo(summary_row, "类别 *", [], width=11)
         amount_row = design.row(form)
         self.amount = self.field(amount_row, "申请金额/元 *", width=13)
-        self.category = self.combo(amount_row, "类别 *", [], width=13)
         self.occurred_on = self.field(
-            design.row(form), "业务日期", domain.now()[:10], width=32
+            amount_row, "业务日期", domain.now()[:10], width=13
         )
         self.evidence = self.field(
             design.row(form), "报价链接（支出必填）", width=32
@@ -166,9 +165,9 @@ class UiPagesMixin:
         self.participants = tk.Listbox(
             form,
             selectmode="multiple",
-            height=3,
+            height=2,
             exportselection=False,
-            font=("Microsoft YaHei UI", 10),
+            font=("Microsoft YaHei UI", -13),
             relief="flat",
             highlightthickness=1,
             highlightbackground=design.LINE,
@@ -195,11 +194,11 @@ class UiPagesMixin:
         page = self.pages[2]
         progress = design.card(page, "支出处理进度")
         self.flow_canvas = tk.Canvas(
-            progress, height=65, background="white", highlightthickness=0
+            progress, height=56, background="white", highlightthickness=0
         )
         self.flow_canvas.pack(fill="x")
         self.flow_canvas.bind("<Configure>", self.redraw_flow)
-        left, right = design.columns(page, right_width=345)
+        left, right = design.columns(page, right_width=290)
         details = design.card(left, "当前申请与阶段操作", expand=True)
         self.workflow_picker = self.combo(
             design.row(details), "选择账目", [], width=46
@@ -212,8 +211,8 @@ class UiPagesMixin:
         self.details = tk.Text(
             details,
             wrap="word",
-            height=10,
-            font=("Microsoft YaHei UI", 10),
+            height=5,
+            font=("Microsoft YaHei UI", -13),
             background="white",
             foreground=design.INK,
             relief="flat",
@@ -233,46 +232,53 @@ class UiPagesMixin:
             reviewer,
             text="批准申请后才可购买；完成审核后才入账。",
             style="Muted.TLabel",
-            wraplength=320,
-        ).pack(anchor="w", pady=(0, 8))
+            wraplength=247,
+        ).pack(anchor="w", pady=(0, 4))
+        review_actions = design.row(reviewer)
         ttk.Button(
-            reviewer,
+            review_actions,
             text="申请审核通过",
             command=self.approve,
             style="Primary.TButton",
-        ).pack(fill="x", pady=4)
+        ).pack(side="left", pady=2)
         ttk.Button(
-            reviewer,
+            review_actions,
             text="完成审核并入账",
             command=self.complete,
             style="Primary.TButton",
-        ).pack(fill="x", pady=4)
+        ).pack(side="left", padx=(6, 0))
         ttk.Button(reviewer, text="驳回并说明原因", command=self.reject).pack(
-            fill="x", pady=4
+            fill="x", pady=2
         )
         applicant = design.card(right, "申请人操作", expand=True)
         self.payer = self.combo(
-            design.row(applicant), "实际垫付人", ["团队"], width=29
+            design.row(applicant), "实际垫付人", ["团队"], width=23
         )
+        payment_actions = design.row(applicant)
+        for label, command in (
+            ("登记实际付款", self.record_payment),
+            ("确认已经使用", self.confirm_used),
+        ):
+            ttk.Button(payment_actions, text=label, command=command).pack(
+                side="left", padx=(0, 6), pady=2
+            )
         for label, command, style in (
-            ("登记实际付款", self.record_payment, "TButton"),
-            ("确认已经使用", self.confirm_used, "TButton"),
             ("全额退款到账并核平", self.refund, "Quiet.TButton"),
             ("主动撤销申请", self.cancel, "Danger.TButton"),
         ):
             ttk.Button(
                 applicant, text=label, command=command, style=style
-            ).pack(fill="x", pady=4)
+            ).pack(fill="x", pady=2)
 
     def build_statistics(self):
         """Present totals, budget usage and an actual category chart."""
         page = self.pages[3]
         metrics = ttk.Frame(page, style="Surface.TFrame")
-        metrics.pack(fill="x", pady=(0, 16))
+        metrics.pack(fill="x", pady=(0, 8))
         self.stat_income = design.metric(metrics, "期间收入", income=True)
         self.stat_expense = design.metric(metrics, "期间支出")
         self.stat_net = design.metric(metrics, "期间净收支")
-        left, right = design.columns(page, proportion=1, right_width=470)
+        left, right = design.columns(page, proportion=1, right_width=350)
         budget = design.card(left, "月度 / 年度预算", expand=True)
         self.period = self.field(
             design.row(budget),
@@ -283,13 +289,13 @@ class UiPagesMixin:
         self.budget_caption = ttk.Label(
             budget, text="尚未设置预算", style="CardTitle.TLabel"
         )
-        self.budget_caption.pack(anchor="w", pady=(15, 12))
+        self.budget_caption.pack(anchor="w", pady=(7, 5))
         self.budget_progress = ttk.Progressbar(
             budget, maximum=100, style="Teal.Horizontal.TProgressbar"
         )
         self.budget_progress.pack(fill="x", pady=(0, 10))
         self.budget_hint = ttk.Label(budget, text="", style="Warning.TLabel")
-        self.budget_hint.pack(anchor="w", pady=(0, 14))
+        self.budget_hint.pack(anchor="w", pady=(0, 6))
         self.limit = self.field(design.row(budget), "预算额度/元", width=25)
         buttons = design.row(budget)
         ttk.Button(
@@ -309,11 +315,11 @@ class UiPagesMixin:
                 ("used", "实际/元", 90),
                 ("over", "超额/元", 80),
             ],
-            height=3,
+            height=2,
         )
         statistics = design.card(right, "分类、成员统计与类别维护", expand=True)
         self.chart_canvas = tk.Canvas(
-            statistics, background="white", height=155, highlightthickness=0
+            statistics, background="white", height=102, highlightthickness=0
         )
         self.chart_canvas.pack(fill="x", pady=(0, 8))
         self.chart_canvas.bind("<Configure>", self.redraw_chart)
@@ -324,7 +330,7 @@ class UiPagesMixin:
                 ("label", "类别 / 成员", 165),
                 ("amount", "金额/元", 90),
             ],
-            height=4,
+            height=3,
         )
         ttk.Button(
             statistics, text="添加收入 / 支出类别", command=self.add_category
@@ -332,7 +338,7 @@ class UiPagesMixin:
 
     def build_settlement(self):
         """Pair a remaining-debt table with the offline cash entry card."""
-        left, right = design.columns(self.pages[4], right_width=345)
+        left, right = design.columns(self.pages[4], right_width=290)
         listing = design.card(
             left,
             "待结款项",
@@ -360,11 +366,11 @@ class UiPagesMixin:
                 ("settled", "已结/元", 85),
                 ("remaining", "未结/元", 85),
             ],
-            height=9,
+            height=5,
         )
         self.obligation_tree.bind("<<TreeviewSelect>>", self.select_obligation)
         self.debt_total = ttk.Label(listing, text="", style="CardTitle.TLabel")
-        self.debt_total.pack(anchor="w", pady=(10, 0))
+        self.debt_total.pack(anchor="w", pady=(5, 0))
         form = design.card(right, "登记线下结清", expand=True)
         ttk.Label(form, text="付款方 → 收款方", style="Muted.TLabel").pack(
             anchor="w", pady=(8, 10)
@@ -388,7 +394,7 @@ class UiPagesMixin:
         self.settlement_remaining = ttk.Label(
             form, text="尚未选择待结款", style="Muted.TLabel"
         )
-        self.settlement_remaining.pack(anchor="w", pady=(20, 10))
+        self.settlement_remaining.pack(anchor="w", pady=(9, 5))
         ttk.Button(
             form,
             text="确认已在线下结清",
@@ -405,7 +411,7 @@ class UiPagesMixin:
     def build_audit(self):
         """Place an understandable correction preview beside operation logs."""
         left, right = design.columns(
-            self.pages[5], proportion=1, right_width=530
+            self.pages[5], proportion=1, right_width=410
         )
         correction = design.card(left, "已入账更正", expand=True)
         self.correction_caption = ttk.Label(
@@ -437,7 +443,7 @@ class UiPagesMixin:
             text="作废并建立更正申请",
             command=self.correct,
             style="Primary.TButton",
-        ).pack(fill="x", pady=(18, 8))
+        ).pack(fill="x", pady=(8, 4))
         ttk.Button(
             correction,
             text="仅作废原入账",
@@ -475,5 +481,5 @@ class UiPagesMixin:
                 ("object", "对象 ID", 250),
                 ("summary", "操作摘要", 350),
             ],
-            height=10,
+            height=5,
         )

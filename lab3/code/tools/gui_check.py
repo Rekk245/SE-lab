@@ -18,22 +18,51 @@ def descendants(widget):
         yield from descendants(child)
 
 
-def clipped_controls(app, page):
-    """Report actionable controls extending beyond the actual client area."""
+def clipped_controls(page):
+    """Report clipped controls inside the scrollable page content."""
     clipped = []
     for widget in descendants(page):
         if not isinstance(widget, (ttk.Button, ttk.Entry, ttk.Combobox)):
             continue
-        x = widget.winfo_rootx() - app.root.winfo_rootx()
-        y = widget.winfo_rooty() - app.root.winfo_rooty()
-        if (
-            x < 0
-            or y < 0
-            or x + widget.winfo_width() > app.root.winfo_width()
-            or y + widget.winfo_height() > app.root.winfo_height()
+        if not widget.winfo_ismapped() or (
+            widget.winfo_height() < widget.winfo_reqheight()
+            or widget.winfo_width() < widget.winfo_reqwidth()
         ):
             clipped.append(str(widget))
+            continue
+        ancestor = widget.master
+        while ancestor is not page.master:
+            x = widget.winfo_rootx() - ancestor.winfo_rootx()
+            y = widget.winfo_rooty() - ancestor.winfo_rooty()
+            if (
+                x < 0
+                or y < 0
+                or x + widget.winfo_width() > ancestor.winfo_width()
+                or y + widget.winfo_height() > ancestor.winfo_height()
+            ):
+                clipped.append(str(widget))
+                break
+            ancestor = ancestor.master
     return clipped
+
+
+def visible_members(app, viewport):
+    """Count complete rows visible at the top of the members page."""
+    tree = app.member_tree
+    offset = tree.winfo_rooty() - viewport.winfo_rooty()
+    visible = 0
+    for item in tree.get_children():
+        box = tree.bbox(item)
+        if (
+            box
+            and 0 <= offset + box[1]
+            and (
+                box[1] + box[3] <= tree.winfo_height()
+                and offset + box[1] + box[3] <= viewport.winfo_height()
+            )
+        ):
+            visible += 1
+    return visible
 
 
 def check_interactions(app):
@@ -83,7 +112,9 @@ def check_invitation_ui(app):
     assert len(app.member_tree.get_children()) == 5
     assert app.remove_button.instate(["disabled"])
     login_demo(app, "张三")
-    candidate = next(row for row in app.member_rows if row["member_code"] == "SL007")
+    candidate = next(
+        row for row in app.member_rows if row["member_code"] == "SL007"
+    )
     app.member_tree.selection_set(candidate["id"])
     with mock.patch("tkinter.simpledialog.askstring", return_value="界面验证"):
         app.remove_member()
@@ -110,23 +141,44 @@ def main():
             lambda _kind, value, _trace: callback_errors.append(str(value))
         )
         try:
-            for username, _name in demo.ACCOUNTS:
+            scenarios = [(username, False) for username, _ in demo.ACCOUNTS]
+            scenarios.append((demo.ACCOUNTS[0][0], True))
+            for username, high_dpi in scenarios:
+                if high_dpi:
+                    app.root.tk.call("tk", "scaling", 8 / 3)
                 login_demo(app, username)
-                for size in ("1440x940", "1240x820"):
+                for size in ("1280x729", "1180x710", "960x600"):
                     app.root.geometry(size)
                     for index, page in enumerate(app.pages):
                         app.navigate(index)
                         app.root.update()
+                        viewport = page.master
+                        member_count = (
+                            visible_members(app, viewport) if index == 0 else None
+                        )
+                        assert member_count in (None, 4), size
+                        scrollable = viewport.yview()[1] < 1
+                        if size == "1280x729":
+                            assert not scrollable, (size, index + 1)
+                        if scrollable:
+                            viewport.yview_moveto(1)
+                            assert viewport.yview()[1] == 1
+                            viewport.yview_moveto(0)
                         result.append(
                             dict(
                                 account=username,
+                                high_dpi=high_dpi,
                                 size=size,
                                 page=index + 1,
-                                clipped_controls=clipped_controls(app, page),
+                                visible_member_rows=member_count,
+                                scrollable=scrollable,
+                                clipped_controls=clipped_controls(page),
                             )
                         )
                 check_interactions(app)
-            with mock.patch("tkinter.messagebox.showerror", side_effect=fail_dialog):
+            with mock.patch(
+                "tkinter.messagebox.showerror", side_effect=fail_dialog
+            ):
                 check_invitation_ui(app)
         finally:
             app.root.destroy()

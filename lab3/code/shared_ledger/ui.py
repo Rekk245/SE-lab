@@ -46,8 +46,10 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         self.database = database
         self.root = tk.Tk()
         self.root.title("合账 · 多人共享记账系统")
-        self.root.geometry("1440x940")
-        self.root.minsize(1240, 820)
+        width = min(1180, self.root.winfo_screenwidth() - 32)
+        height = min(730, self.root.winfo_screenheight() - 90)
+        self.root.geometry(f"{width}x{height}")
+        self.root.minsize(min(960, width), min(600, height))
         self.session = None
         self.ledger_id = None
         self.ledger_rows = []
@@ -61,7 +63,24 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
         self.container.pack(fill="both", expand=True)
         self.flow_row = None
         self.chart_rows = []
+        self.root.bind("<MouseWheel>", self.scroll_page)
         self.show_login()
+
+    def scroll_page(self, event):
+        """Scroll the page outside tables, lists and text areas."""
+        widget = event.widget
+        while isinstance(widget, tk.Misc):
+            if isinstance(
+                widget, (ttk.Treeview, ttk.Combobox, tk.Listbox, tk.Text)
+            ):
+                return
+            if isinstance(widget, design.ScrollablePage):
+                if event.delta:
+                    widget.viewport.yview_scroll(
+                        -1 if event.delta > 0 else 1, "units"
+                    )
+                return
+            widget = widget.master
 
     def run(self):
         """Enter the desktop event loop."""
@@ -76,7 +95,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     def field(parent, label, default="", width=24, show=None):
         """Create a labeled entry and return its string variable."""
         frame = ttk.Frame(parent)
-        frame.pack(side="left", padx=(0, 12), pady=5)
+        frame.pack(side="left", padx=(0, 8), pady=2)
         ttk.Label(frame, text=label).pack(anchor="w")
         variable = tk.StringVar(value=default)
         ttk.Entry(frame, textvariable=variable, width=width, show=show).pack()
@@ -86,7 +105,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     def combo(parent, label, values, width=24):
         """Create a read-only selection, avoiding ambiguous free-form IDs."""
         frame = ttk.Frame(parent)
-        frame.pack(side="left", padx=(0, 12), pady=5)
+        frame.pack(side="left", padx=(0, 8), pady=2)
         ttk.Label(frame, text=label).pack(anchor="w")
         widget = ttk.Combobox(
             frame, values=values, state="readonly", width=width
@@ -100,7 +119,7 @@ class LedgerApp(ui_pages.UiPagesMixin, ui_presenter.UiPresenterMixin):
     def tree(parent, columns, height=8):
         """Create a horizontally and vertically scrollable data table."""
         frame = ttk.Frame(parent)
-        frame.pack(fill="both", expand=True, pady=8)
+        frame.pack(fill="both", expand=True, pady=4)
         widget = ttk.Treeview(
             frame,
             columns=[item[0] for item in columns],

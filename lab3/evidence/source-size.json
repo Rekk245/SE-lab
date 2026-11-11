@@ -57,24 +57,24 @@
       "code_lines": 70
     },
     "shared_ledger/ui.py": {
-      "physical": 813,
-      "nonblank": 756,
-      "code_lines": 697
+      "physical": 832,
+      "nonblank": 774,
+      "code_lines": 714
     },
     "shared_ledger/ui_design.py": {
-      "physical": 226,
-      "nonblank": 211,
-      "code_lines": 204
+      "physical": 269,
+      "nonblank": 250,
+      "code_lines": 241
     },
     "shared_ledger/ui_pages.py": {
-      "physical": 479,
-      "nonblank": 469,
-      "code_lines": 459
+      "physical": 485,
+      "nonblank": 475,
+      "code_lines": 465
     },
     "shared_ledger/ui_presenter.py": {
-      "physical": 467,
-      "nonblank": 440,
-      "code_lines": 414
+      "physical": 471,
+      "nonblank": 444,
+      "code_lines": 418
     },
     "shared_ledger/workflow.py": {
       "physical": 367,
@@ -83,9 +83,9 @@
     }
   },
   "total": {
-    "physical": 4139,
-    "nonblank": 3862,
-    "code_lines": 3617
+    "physical": 4211,
+    "nonblank": 3929,
+    "code_lines": 3681
   },
   "tests_physical": 831
 }
