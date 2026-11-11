@@ -14,34 +14,34 @@ class UiPresenterMixin:
 
     def build_login_view(self):
         """Create the navy brand panel and a white, focused login form."""
-        brand = tk.Frame(self.container, background=design.NAVY, width=315)
+        brand = tk.Frame(self.container, background=design.NAVY, width=430)
         brand.pack(side="left", fill="y")
         brand.pack_propagate(False)
         tk.Label(
             brand,
             text="合账",
-            font=("Microsoft YaHei UI", -38, "bold"),
+            font=("Microsoft YaHei UI", 36, "bold"),
             foreground="white",
             background=design.NAVY,
-        ).pack(anchor="w", padx=48, pady=(60, 6))
+        ).pack(anchor="w", padx=48, pady=(110, 8))
         tk.Label(
             brand,
             text="SHARED LEDGER",
-            font=("Segoe UI", -15),
+            font=("Segoe UI", 12),
             foreground="#a8d0dc",
             background=design.NAVY,
         ).pack(anchor="w", padx=51)
         tk.Label(
             brand,
             text="每一笔，共同有数。",
-            font=("Microsoft YaHei UI", -23),
+            font=("Microsoft YaHei UI", 20),
             foreground="white",
             background=design.NAVY,
-        ).pack(anchor="w", padx=48, pady=(44, 12))
+        ).pack(anchor="w", padx=48, pady=(80, 18))
         tk.Label(
             brand,
             text="共享账本 / 分步审批 / 清晰结算",
-            font=("Microsoft YaHei UI", -14),
+            font=("Microsoft YaHei UI", 11),
             foreground="#afd1df",
             background=design.NAVY,
         ).pack(anchor="w", padx=50)
@@ -53,7 +53,7 @@ class UiPresenterMixin:
         ).pack(side="bottom", anchor="w", padx=50, pady=40)
         surface = ttk.Frame(self.container, style="Surface.TFrame")
         surface.pack(fill="both", expand=True)
-        form = ttk.Frame(surface, padding=24)
+        form = ttk.Frame(surface, padding=38)
         form.place(relx=0.5, rely=0.48, anchor="center")
         ttk.Label(form, text="欢迎回到合账", style="CardTitle.TLabel").pack(
             anchor="w"
@@ -79,8 +79,8 @@ class UiPresenterMixin:
         ).pack(anchor="w")
 
     def build_workspace_shell(self):
-        """Provide the prototype's sidebar, top bar and page title."""
-        sidebar = tk.Frame(self.container, width=156, background=design.NAVY)
+        """Provide the prototype's sidebar, top bar_width and page title."""
+        sidebar = tk.Frame(self.container, width=200, background=design.NAVY)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
         tk.Label(
@@ -88,21 +88,21 @@ class UiPresenterMixin:
             text="合账",
             foreground="white",
             background=design.NAVY,
-            font=("Microsoft YaHei UI", -30, "bold"),
-        ).pack(anchor="w", padx=15, pady=(16, 0))
+            font=("Microsoft YaHei UI", 27, "bold"),
+        ).pack(anchor="w", padx=23, pady=(30, 0))
         tk.Label(
             sidebar,
             text="SHARED LEDGER",
             foreground="#a9d1dc",
             background=design.NAVY,
-            font=("Segoe UI", -12),
-        ).pack(anchor="w", padx=16, pady=(1, 18))
+            font=("Segoe UI", 9),
+        ).pack(anchor="w", padx=25, pady=(1, 36))
         self.nav_buttons = []
         for index, label in enumerate(design.NAV_LABELS):
             button = design.navigation_button(
                 sidebar, label, lambda target=index: self.navigate(target)
             )
-            button.pack(fill="x", padx=8, pady=3)
+            button.pack(fill="x", padx=12, pady=5)
             self.nav_buttons.append(button)
         tk.Label(
             sidebar,
@@ -110,11 +110,11 @@ class UiPresenterMixin:
             foreground="white",
             background=design.NAVY,
             justify="left",
-            font=("Microsoft YaHei UI", -13),
-        ).pack(side="bottom", anchor="w", padx=16, pady=14)
+            font=("Microsoft YaHei UI", 10),
+        ).pack(side="bottom", anchor="w", padx=25, pady=30)
         workspace = ttk.Frame(self.container, style="Surface.TFrame")
         workspace.pack(fill="both", expand=True)
-        header = ttk.Frame(workspace, padding=(14, 5))
+        header = ttk.Frame(workspace, padding=(24, 13))
         header.pack(fill="x")
         self.workspace_title = ttk.Label(
             header, text="共享账本", style="CardTitle.TLabel"
@@ -132,24 +132,24 @@ class UiPresenterMixin:
         self.ledger_combo = self.combo(header, "当前账本", [], width=26)
         self.ledger_combo.bind("<<ComboboxSelected>>", self.change_ledger)
         body = ttk.Frame(
-            workspace, style="Surface.TFrame", padding=(14, 9, 14, 4)
+            workspace, style="Surface.TFrame", padding=(24, 21, 24, 7)
         )
         body.pack(fill="both", expand=True)
         self.page_title = ttk.Label(body, text="", style="PageTitle.TLabel")
         self.page_title.pack(anchor="w")
         self.page_hint = ttk.Label(body, text="", style="PageHint.TLabel")
-        self.page_hint.pack(anchor="w", pady=(3, 7))
+        self.page_hint.pack(anchor="w", pady=(6, 18))
         self.banner = ttk.Label(
-            workspace, text="", style="Status.TLabel", padding=(14, 4)
+            workspace, text="", style="Status.TLabel", padding=(24, 10)
         )
         self.banner.pack(side="bottom", fill="x")
         self.notebook = ttk.Notebook(body, style="Workspace.TNotebook")
         self.notebook.pack(fill="both", expand=True)
         self.pages = []
         for title in design.PAGE_TITLES:
-            page = design.ScrollablePage(self.notebook)
+            page = ttk.Frame(self.notebook, style="Surface.TFrame")
             self.notebook.add(page, text=title)
-            self.pages.append(page.content)
+            self.pages.append(page)
         self.notebook.bind("<<NotebookTabChanged>>", self.sync_navigation)
 
     def navigate(self, index):
@@ -167,11 +167,7 @@ class UiPresenterMixin:
             button.configure(
                 background=design.NAV_ACTIVE if active else design.NAVY,
                 foreground="white" if active else "#afd1df",
-                font=(
-                    "Microsoft YaHei UI",
-                    -15,
-                    "bold" if active else "normal",
-                ),
+                font=("Microsoft YaHei UI", 12, "bold" if active else "normal"),
             )
 
     def refresh_book_table(self):
@@ -232,45 +228,33 @@ class UiPresenterMixin:
             value.set("")
         self.load_transactions()
 
-    def refresh_workflow_picker(self, rows):
-        """Offer the current ledger's transactions for review."""
-        self.workflow_rows = rows
+    def open_review(self, _event=None):
+        """Open the selected record without changing the displayed version."""
+        if self.transaction_tree.selection():
+            self.navigate(2)
+
+    def refresh_workflow_picker(self):
+        """Offer the currently displayed records as readable stage choices."""
+        self.workflow_rows = list(self.transaction_rows.values())
         self.workflow_picker.configure(
             values=[
-                f"{row['title']} · {domain.STATUS_NAMES[row['status']]} "
-                f"· {row['id'][:8]}"
-                for row in rows
+                f"{row['title']} · {domain.STATUS_NAMES[row['status']]}"
+                for row in self.workflow_rows
             ]
         )
         self.workflow_picker.set("")
-        self.show_detail(None)
 
-    def refresh_correction_picker(self, rows):
-        """Offer posted entries that are still eligible for reversal."""
-        self.correction_rows = [
-            row for row in rows if row["status"] == "COMPLETED"
-        ]
-        self.correction_picker.configure(
-            values=[
-                f"{row['title']} · ¥{domain.format_money(row['amount_cent'])}"
-                f" · {row['id'][:8]}"
-                for row in self.correction_rows
-            ]
-        )
-        self.correction_picker.set("")
-        self.pick_correction()
-
-    def pick_correction(self, _event=None):
-        """Start a new correction draft for the linked entry."""
-        selected = self.correction_picker.current() >= 0
-        self.correction_amount.set("")
-        self.correction_reason.set("")
-        for button in self.correction_actions:
-            button.configure(state="normal" if selected else "disabled")
-        self.update_correction_preview()
+    def pick_workflow(self, _event=None):
+        """Link the review-page selection to the original cached table row."""
+        index = self.workflow_picker.current()
+        if index >= 0:
+            transaction_id = self.workflow_rows[index]["id"]
+            self.transaction_tree.selection_set(transaction_id)
+            self.transaction_tree.see(transaction_id)
+            self.show_detail(self.query.detail(transaction_id))
 
     def present_selection(self, row):
-        """Update the stage strip and caption for the review selection."""
+        """Update the stage strip and correction card using selected facts."""
         self.flow_row = row
         self.redraw_flow()
         caption = (
@@ -282,6 +266,8 @@ class UiPresenterMixin:
             else "尚未选择账目"
         )
         self.selection_caption.configure(text=caption)
+        self.correction_caption.configure(text=caption)
+        self.update_correction_preview()
 
     def redraw_flow(self, _event=None):
         """Draw the four normal stages and distinguish terminal branches."""
@@ -300,7 +286,7 @@ class UiPresenterMixin:
             if row and row["status"] in states
             else -1
         )
-        width = canvas.winfo_width()
+        width = max(canvas.winfo_width(), 600)
         positions = [
             45 + index * (width - 90) / (len(stages) - 1)
             for index in range(len(stages))
@@ -316,16 +302,16 @@ class UiPresenterMixin:
                 19,
                 text=str(index + 1),
                 fill="white" if index <= current else design.MUTED,
-                font=("Segoe UI", -13, "bold"),
+                font=("Segoe UI", 10, "bold"),
             )
             canvas.create_text(
                 x,
-                46,
+                52,
                 text=label,
                 fill=design.TEAL if index == current else design.MUTED,
                 font=(
                     "Microsoft YaHei UI",
-                    -13,
+                    10,
                     "bold" if index == current else "normal",
                 ),
             )
@@ -397,24 +383,24 @@ class UiPresenterMixin:
                 anchor="w",
                 text="此期间暂无已入账支出",
                 fill=design.MUTED,
-                font=("Microsoft YaHei UI", -13),
+                font=("Microsoft YaHei UI", 10),
             )
             return
-        width = canvas.winfo_width()
+        width = max(canvas.winfo_width(), 350)
         maximum = max(row["total"] for row in rows)
         for index, row in enumerate(rows):
-            y = 7 + index * 23
-            bar_width = max(2, (width - 170) * row["total"] / maximum)
+            y = 16 + index * 35
+            bar_width = max(2, (width - 195) * row["total"] / maximum)
             canvas.create_text(
                 0,
                 y + 9,
                 anchor="w",
                 text=row["label"][:7],
                 fill=design.INK,
-                font=("Microsoft YaHei UI", -13),
+                font=("Microsoft YaHei UI", 10),
             )
             canvas.create_rectangle(
-                83, y, 83 + bar_width, y + 16, fill=design.TEAL, outline=""
+                83, y, 83 + bar_width, y + 19, fill=design.TEAL, outline=""
             )
             canvas.create_text(
                 91 + bar_width,
@@ -422,7 +408,7 @@ class UiPresenterMixin:
                 anchor="w",
                 text="¥" + domain.format_money(row["total"]),
                 fill=design.INK,
-                font=("Segoe UI", -13),
+                font=("Segoe UI", 10),
             )
 
     def filter_obligations(self, _event=None):
@@ -455,11 +441,10 @@ class UiPresenterMixin:
 
     def update_correction_preview(self, *_args):
         """Preview original and reversal amounts without changing any data."""
-        index = self.correction_picker.current()
-        if index < 0:
+        row = self.flow_row
+        if not row:
             self.fill_tree(self.correction_preview, [])
             return
-        row = self.correction_rows[index]
         values = [
             (
                 "original",

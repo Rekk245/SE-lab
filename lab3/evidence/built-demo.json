@@ -22,13 +22,13 @@
       "display_name": "孙八"
     }
   ],
-  "ledger_id": "93b936aa1b64423eb50eca39282c76ea",
-  "income_id": "c442b2778fb84b5aa6acc4679c3d9535",
+  "ledger_id": "67e0df096e4e49db95f72d2de14730b6",
+  "income_id": "bd30c655d26848ec9b5a7342cc29ce48",
   "expense_ids": [
-    "27790cee341f40c68a4719a18ccd1aab",
-    "356a3b52601343d29fa1ce7b87f1e080"
+    "5a6d0470dac84d4cb011d0eb4ee199a6",
+    "d808f05ba83e42b5b50e57705b3f42c3"
   ],
-  "pending_id": "62a2f24547e9405fb5e8a8c80b2c3da0",
+  "pending_id": "8d49a18bb95e410a96ac7cdeac8dd7a1",
   "summary": {
     "income": 50000,
     "expense": 32000,
@@ -51,17 +51,17 @@
     ],
     "shares": [
       {
-        "id": "1eff0238f5b148bfb354f8c03a7840fa",
+        "id": "21add79c1a3a4f9da8f7f80092502711",
         "display_name": "张三",
         "total": 4000
       },
       {
-        "id": "233084016f964702b1cac9c9326fa280",
+        "id": "ca908b97753f41cbb9000fa786dc9f71",
         "display_name": "李四",
         "total": 4000
       },
       {
-        "id": "fa0240453dba42f5b508098ff6a7b4cb",
+        "id": "6f383b08d997450aac676e0240b5707b",
         "display_name": "王五",
         "total": 4000
       }

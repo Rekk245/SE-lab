@@ -42,29 +42,27 @@ def configure(root):
     """Configure a restrained navy/teal theme with clear action hierarchy."""
     style = ttk.Style(root)
     style.theme_use("clam")
-    style.configure(".", font=("Microsoft YaHei UI", -13))
+    style.configure(".", font=("Microsoft YaHei UI", 10))
     style.configure("TFrame", background="white")
     style.configure("Surface.TFrame", background=SURFACE)
     style.configure("Card.TFrame", background="white", relief="flat")
     style.configure("TLabel", background="white", foreground=INK)
     style.configure("Muted.TLabel", foreground=MUTED)
-    style.configure(
-        "CardTitle.TLabel", font=("Microsoft YaHei UI", -17, "bold")
-    )
+    style.configure("CardTitle.TLabel", font=("Microsoft YaHei UI", 14, "bold"))
     style.configure(
         "PageTitle.TLabel",
-        font=("Microsoft YaHei UI", -24, "bold"),
+        font=("Microsoft YaHei UI", 21, "bold"),
         background=SURFACE,
         foreground=INK,
     )
     style.configure("PageHint.TLabel", background=SURFACE, foreground=MUTED)
-    style.configure("Metric.TLabel", font=("Microsoft YaHei UI", -29, "bold"))
+    style.configure("Metric.TLabel", font=("Microsoft YaHei UI", 26, "bold"))
     style.configure("Income.Metric.TLabel", foreground=TEAL)
     style.configure("Warning.TLabel", foreground=AMBER)
     style.configure("Status.TLabel", background=SURFACE, foreground=MUTED)
     style.configure(
         "TEntry",
-        padding=(6, 4),
+        padding=(8, 7),
         fieldbackground="white",
         bordercolor=LINE,
         lightcolor=LINE,
@@ -73,7 +71,7 @@ def configure(root):
     style.map("TEntry", bordercolor=[("focus", TEAL)])
     style.configure(
         "TCombobox",
-        padding=(6, 4),
+        padding=(7, 6),
         fieldbackground="white",
         bordercolor=LINE,
         arrowcolor=TEAL,
@@ -86,7 +84,7 @@ def configure(root):
     )
     style.configure(
         "TButton",
-        padding=(9, 5),
+        padding=(13, 8),
         background="white",
         foreground=TEAL,
         bordercolor=TEAL,
@@ -104,7 +102,7 @@ def configure(root):
         background=TEAL,
         foreground="white",
         bordercolor=TEAL,
-        font=("Microsoft YaHei UI", -13, "bold"),
+        font=("Microsoft YaHei UI", 10, "bold"),
     )
     style.map(
         "Primary.TButton",
@@ -117,20 +115,20 @@ def configure(root):
     style.configure("Quiet.TButton", borderwidth=0, foreground=MUTED)
     style.configure(
         "Treeview",
-        rowheight=25,
+        rowheight=36,
         background="white",
         fieldbackground="white",
         foreground=INK,
         borderwidth=0,
-        font=("Microsoft YaHei UI", -13),
+        font=("Microsoft YaHei UI", 10),
     )
     style.configure(
         "Treeview.Heading",
         background="#eaf1f6",
         foreground="#657f91",
         relief="flat",
-        padding=(6, 4),
-        font=("Microsoft YaHei UI", -13, "bold"),
+        padding=(8, 10),
+        font=("Microsoft YaHei UI", 10, "bold"),
     )
     style.map(
         "Treeview",
@@ -147,45 +145,42 @@ def configure(root):
         background=TEAL,
         troughcolor="#eaf1f3",
         borderwidth=0,
-        thickness=8,
+        thickness=12,
     )
     style.configure(
         "Amber.Horizontal.TProgressbar",
         background="#e1aa58",
         troughcolor="#f6ecda",
         borderwidth=0,
-        thickness=8,
+        thickness=12,
     )
-    root.option_add("*TEntry*Font", ("Microsoft YaHei UI", -13))
-    root.option_add("*TCombobox*Font", ("Microsoft YaHei UI", -13))
-    root.option_add("*TCombobox*Listbox.font", ("Microsoft YaHei UI", -13))
     return style
 
 
 def card(parent, title, hint="", *, expand=False):
     """Create a white inset content card, matching the prototype spacing."""
-    panel = ttk.Frame(parent, style="Card.TFrame", padding=11)
-    panel.pack(fill="both" if expand else "x", expand=expand, pady=(0, 8))
+    panel = ttk.Frame(parent, style="Card.TFrame", padding=18)
+    panel.pack(fill="both" if expand else "x", expand=expand, pady=(0, 14))
     ttk.Label(panel, text=title, style="CardTitle.TLabel").pack(
         anchor="w", pady=(0, 8)
     )
     if hint:
         ttk.Label(panel, text=hint, style="Muted.TLabel", wraplength=500).pack(
-            anchor="w", pady=(0, 6)
+            anchor="w", pady=(0, 10)
         )
     return panel
 
 
-def columns(parent, proportion=2, right_width=282):
+def columns(parent, proportion=2, right_width=340):
     """Create independent left and right columns with a consistent gutter."""
     layout = ttk.Frame(parent, style="Surface.TFrame")
     layout.pack(fill="both", expand=True)
-    layout.columnconfigure(0, weight=proportion, minsize=286, uniform="cards")
-    layout.columnconfigure(1, weight=1, minsize=right_width, uniform="cards")
+    layout.columnconfigure(0, weight=proportion)
+    layout.columnconfigure(1, weight=1, minsize=right_width)
     layout.rowconfigure(0, weight=1)
     left = ttk.Frame(layout, style="Surface.TFrame")
     right = ttk.Frame(layout, style="Surface.TFrame")
-    left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+    left.grid(row=0, column=0, sticky="nsew", padx=(0, 16))
     right.grid(row=0, column=1, sticky="nsew")
     return left, right
 
@@ -193,21 +188,21 @@ def columns(parent, proportion=2, right_width=282):
 def row(parent):
     """Create a full-width form or action row."""
     frame = ttk.Frame(parent)
-    frame.pack(fill="x", pady=(0, 2))
+    frame.pack(fill="x", pady=(0, 5))
     return frame
 
 
 def metric(parent, caption, *, income=False):
     """Create one compact metric tile and return its value label."""
-    panel = ttk.Frame(parent, padding=(12, 8), style="Card.TFrame")
-    panel.pack(side="left", fill="x", expand=True, padx=(0, 8))
+    panel = ttk.Frame(parent, padding=(20, 15), style="Card.TFrame")
+    panel.pack(side="left", fill="x", expand=True, padx=(0, 14))
     ttk.Label(panel, text=caption, style="Muted.TLabel").pack(anchor="w")
     label = ttk.Label(
         panel,
         text="¥ 0.00",
         style="Income.Metric.TLabel" if income else "Metric.TLabel",
     )
-    label.pack(anchor="w", pady=(3, 0))
+    label.pack(anchor="w", pady=(6, 2))
     return label
 
 
@@ -218,9 +213,9 @@ def navigation_button(parent, label, command):
         text=label,
         command=command,
         anchor="w",
-        font=("Microsoft YaHei UI", -15),
-        padx=12,
-        pady=8,
+        font=("Microsoft YaHei UI", 12),
+        padx=17,
+        pady=13,
         background=NAVY,
         foreground="#afd1df",
         relief="flat",
@@ -229,41 +224,3 @@ def navigation_button(parent, label, command):
         borderwidth=0,
         cursor="hand2",
     )
-
-
-class ScrollablePage(ttk.Frame):  # pylint: disable=too-many-ancestors
-    """Give forms their full height and scroll when the window is shorter."""
-
-    def __init__(self, parent):
-        super().__init__(parent, style="Surface.TFrame")
-        self.viewport = tk.Canvas(
-            self, background=SURFACE, highlightthickness=0, width=1, height=1
-        )
-        self.scrollbar = ttk.Scrollbar(
-            self, orient="vertical", command=self.viewport.yview
-        )
-        self.viewport.configure(yscrollcommand=self.scrollbar.set)
-        self.viewport.grid(row=0, column=0, sticky="nsew")
-        self.scrollbar.grid(row=0, column=1, sticky="ns")
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.content = ttk.Frame(self.viewport, style="Surface.TFrame")
-        self.content_window = self.viewport.create_window(
-            0, 0, window=self.content, anchor="nw"
-        )
-        self.viewport.bind("<Configure>", self.fit_content)
-        self.content.bind("<Configure>", self.fit_content)
-
-    def fit_content(self, _event=None):
-        """Expand the content to the viewport and scroll any overflow."""
-        width = self.viewport.winfo_width()
-        viewport_height = self.viewport.winfo_height()
-        height = max(viewport_height, self.content.winfo_reqheight())
-        self.viewport.itemconfigure(
-            self.content_window, width=width, height=height
-        )
-        self.viewport.configure(scrollregion=(0, 0, width, height))
-        if height > viewport_height:
-            self.scrollbar.grid()
-        else:
-            self.scrollbar.grid_remove()
