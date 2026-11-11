@@ -1,0 +1,23 @@
+实验三 Git 远程管理实测记录
+仓库：https://github.com/Rekk245/SE-lab.git
+分支：main
+目录：lab3/
+
+实现提交：e833c8afabcf6b8aefab24efebf763e3559a3ea8
+提交说明：Complete lab3 shared ledger implementation and report
+
+git push origin main
+To https://github.com/Rekk245/SE-lab.git
+   90e27af..e833c8a  main -> main
+
+git rev-parse HEAD
+e833c8afabcf6b8aefab24efebf763e3559a3ea8
+
+git ls-remote origin refs/heads/main
+e833c8afabcf6b8aefab24efebf763e3559a3ea8 refs/heads/main
+
+核对结果：本地实现提交与当时远端 main 完全相同，推送成功。
+git status --short 输出为空；从原基线到实现提交，lab1 的差异为空。
+
+本记录随后作为独立证据提交保存；后续证据提交不改变上述应用实现。
+验证日期：2026-11-11（Asia/Shanghai）
